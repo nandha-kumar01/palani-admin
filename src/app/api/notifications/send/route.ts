@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from 'next/server';
+import admin from 'firebase-admin';
+import { verifyToken } from '@/lib/auth';
+import { withTimeout, handleApiError } from '@/lib/apiTimeout';
+
+
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+    databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com/`,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verify authentication
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, error: 'Authorization required' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+
+    const { userId, title, body, data, tokens } = await request.json();
+
+    if (!title || !body) {
+      return NextResponse.json({ success: false, error: 'Title and body are required' },
+        { status: 400 }
+      );
+    }
+
+    let targetTokens: string[] = [];
+
+    if (tokens) {
+      // Direct tokens provided
+      targetTokens = Array.isArray(tokens) ? tokens : [tokens];
+    } else if (userId) {
+      // Get FCM token for specific user from Realtime Database
+      const db = admin.database();
+      const tokenSnapshot = await db.ref(`fcmTokens/${userId}`).once('value');
+      const tokenData = tokenSnapshot.val();
+      
+      if (tokenData && tokenData.token) {
+        targetTokens = [tokenData.token];
+      }
+    } else {
+      return NextResponse.json({ success: false, error: 'Either userId or tokens must be provided' },
+        { status: 400 }
+      );
+    }
+
+    if (targetTokens.length === 0) {
+      return NextResponse.json({ success: false, error: 'No FCM tokens found for the target user(s)' },
+        { status: 404 }
+      );
+    }
+
+    // Prepare the message
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+      tokens: targetTokens,
+    };
+
+    // Send the notification
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: targetTokens,
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+    });
+
+    return NextResponse.json({
+      success: true,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      responses: response.responses,
+    });
+
+  } catch (error: any) {
+
+    return NextResponse.json({ success: false, error: 'Failed to send notification' },
+      { status: 500 }
+    );
+  }
+}
