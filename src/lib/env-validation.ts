@@ -55,9 +55,7 @@ export function validateEnvironmentVariables() {
   console.log('✅ All required environment variables are present');
 }
 
-// Auto-validate in production
-if (process.env.NODE_ENV === 'production') {
-  validateEnvironmentVariables();
-}
+// Environment validation is now done during actual database connections
+// instead of during module import to prevent build-time issues
 
 export default validateEnvironmentVariables;
