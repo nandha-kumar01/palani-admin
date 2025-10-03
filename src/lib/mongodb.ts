@@ -1,11 +1,28 @@
 import mongoose from 'mongoose';
 import { MongoClient, Db } from 'mongodb';
+import { validateEnvironmentVariables } from './env-validation';
+
+// Validate environment variables
+try {
+  validateEnvironmentVariables();
+} catch (error) {
+  console.error('Environment validation failed:', error);
+  if (process.env.NODE_ENV === 'production') {
+    throw error;
+  }
+}
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
+  console.error('Environment variables:', {
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL: process.env.VERCEL,
+    MONGODB_URI_exists: !!process.env.MONGODB_URI,
+    all_env_keys: Object.keys(process.env).filter(key => key.includes('MONGO'))
+  });
   throw new Error(
-    'Please define the MONGODB_URI environment variable inside .env.local'
+    'Please define the MONGODB_URI environment variable inside .env.local or Vercel environment variables'
   );
 }
 

@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "node check-env.js",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "build:analyze": "ANALYZE=true npm run build",
     "build:production": "NODE_ENV=production npm run build",
+    "build:vercel": "NODE_ENV=production next build",
     "dev:turbo": "next dev --turbo",
     "start:optimized": "NODE_ENV=production npm start"
   },
