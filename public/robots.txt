@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+
+# Allow specific public pages if any
+Allow: /
+
+# Sitemap location
+Sitemap: https://palani-pathayathirai.com/sitemap.xml
