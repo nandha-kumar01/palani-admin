@@ -4,22 +4,11 @@ import Notification from '@/models/Notification';
 import User from '@/models/User';
 import { withAuth } from '@/lib/middleware';
 import { withTimeout } from '@/lib/apiTimeout';
+import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin (if not already initialized)
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  } catch (error) {
-    // Firebase admin initialization error
-  }
-}
+// Initialize Firebase Admin
+initializeFirebaseAdmin();
 
 // POST - Send push notification to devices
 async function sendPushNotification(request: NextRequest) {
