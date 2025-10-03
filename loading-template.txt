@@ -1,0 +1,81 @@
+        {/* Loading Animation Overlay */}
+        {showLoadingAnimation && (
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 9999,
+              transition: 'all 0.3s ease-in-out',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'smoothBounce 2s infinite ease-in-out',
+              }}
+            >
+              <Player
+                animationData={loadingAnimation}
+                autoplay={true}
+                loop={true}
+                speed={0.7}
+                rendererSettings={{
+                  preserveAspectRatio: 'xMidYMid slice'
+                }}
+                style={{
+                  width: '350px',
+                  height: '350px',
+                  filter: 'drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3))',
+                  display: 'block',
+                  margin: '0 auto',
+                }}
+              />
+            </Box>
+            <Typography
+              variant="h6"
+              sx={{
+                mt: 3,
+                color: '#667eea',
+                fontWeight: 600,
+                textAlign: 'center',
+                animation: 'smoothFadeInOut 3s infinite ease-in-out',
+                textShadow: '0 2px 4px rgba(102, 126, 234, 0.2)',
+              }}
+            >
+              Loading DATA_TYPE...
+            </Typography>
+            <style jsx>{`
+              @keyframes smoothFadeInOut {
+                0%, 100% { 
+                  opacity: 0.5; 
+                  transform: translateY(0px);
+                }
+                50% { 
+                  opacity: 1; 
+                  transform: translateY(-2px);
+                }
+              }
+              
+              @keyframes smoothBounce {
+                0%, 100% { 
+                  transform: translateY(0px) scale(1);
+                }
+                50% { 
+                  transform: translateY(-5px) scale(1.02);
+                }
+              }
+            `}</style>
+          </Box>
+        )}
