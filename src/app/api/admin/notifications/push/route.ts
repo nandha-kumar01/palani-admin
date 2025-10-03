@@ -4,15 +4,19 @@ import Notification from '@/models/Notification';
 import User from '@/models/User';
 import { withAuth } from '@/lib/middleware';
 import { withTimeout } from '@/lib/apiTimeout';
-import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
-import admin from 'firebase-admin';
-
-// Initialize Firebase Admin
-initializeFirebaseAdmin();
+import { getFirebaseAdminMessaging, isFirebaseAdminAvailable } from '@/lib/firebase-admin';
 
 // POST - Send push notification to devices
 async function sendPushNotification(request: NextRequest) {
   try {
+    // Check if Firebase is available
+    if (!isFirebaseAdminAvailable()) {
+      return NextResponse.json({
+        success: false,
+        error: 'Firebase notifications are not configured'
+      }, { status: 503 });
+    }
+
     await dbConnect();
 
     const body = await request.json();
@@ -155,10 +159,19 @@ async function sendPushNotification(request: NextRequest) {
       tokenCount?: number;
     }[] = [];
 
+    // Get Firebase messaging instance
+    const messaging = getFirebaseAdminMessaging();
+    if (!messaging) {
+      return NextResponse.json({
+        success: false,
+        error: 'Firebase messaging not available'
+      }, { status: 503 });
+    }
+
     // Send to Android devices
     if (androidTokens.length > 0) {
       try {
-        const response = await admin.messaging().sendEachForMulticast({
+        const response = await messaging.sendEachForMulticast({
           tokens: androidTokens,
           ...messageData
         });
@@ -193,7 +206,7 @@ async function sendPushNotification(request: NextRequest) {
     // Send to iOS devices
     if (iosTokens.length > 0) {
       try {
-        const response = await admin.messaging().sendEachForMulticast({
+        const response = await messaging.sendEachForMulticast({
           tokens: iosTokens,
           ...messageData
         });
@@ -228,7 +241,7 @@ async function sendPushNotification(request: NextRequest) {
     // Send to Web devices
     if (webTokens.length > 0) {
       try {
-        const response = await admin.messaging().sendEachForMulticast({
+        const response = await messaging.sendEachForMulticast({
           tokens: webTokens,
           ...messageData
         });

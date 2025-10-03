@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { withTimeout, handleApiError } from '@/lib/apiTimeout';
-import { initializeFirebaseAdmin } from '@/lib/firebase-admin';
-import admin from 'firebase-admin';
-
-// Initialize Firebase Admin SDK
-initializeFirebaseAdmin();
+import { getFirebaseAdminMessaging, getFirebaseAdminDatabase, isFirebaseAdminAvailable } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase is available
+    if (!isFirebaseAdminAvailable()) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Firebase notifications are not configured' 
+      }, { status: 503 });
+    }
+
     // Verify authentication
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -35,7 +39,14 @@ export async function POST(request: NextRequest) {
       targetTokens = Array.isArray(tokens) ? tokens : [tokens];
     } else if (userId) {
       // Get FCM token for specific user from Realtime Database
-      const db = admin.database();
+      const db = getFirebaseAdminDatabase();
+      if (!db) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Firebase database not available' 
+        }, { status: 503 });
+      }
+
       const tokenSnapshot = await db.ref(`fcmTokens/${userId}`).once('value');
       const tokenData = tokenSnapshot.val();
       
@@ -54,18 +65,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare the message
-    const message = {
-      notification: {
-        title,
-        body,
-      },
-      data: data || {},
-      tokens: targetTokens,
-    };
+    // Get Firebase messaging instance
+    const messaging = getFirebaseAdminMessaging();
+    if (!messaging) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Firebase messaging not available' 
+      }, { status: 503 });
+    }
 
     // Send the notification
-    const response = await admin.messaging().sendEachForMulticast({
+    const response = await messaging.sendEachForMulticast({
       tokens: targetTokens,
       notification: {
         title,
@@ -82,7 +92,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-
+    console.error('Notification send error:', error);
     return NextResponse.json({ success: false, error: 'Failed to send notification' },
       { status: 500 }
     );

@@ -7,9 +7,6 @@ const requiredEnvVars = [
   'MONGODB_URI',
   'NEXTAUTH_SECRET',
   'JWT_SECRET',
-  'FIREBASE_PROJECT_ID',
-  'FIREBASE_CLIENT_EMAIL',
-  'FIREBASE_PRIVATE_KEY',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET',
@@ -21,6 +18,9 @@ const optionalEnvVars = [
   'EMAIL_USER',
   'EMAIL_PASSWORD',
   'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_CLIENT_EMAIL',
+  'FIREBASE_PRIVATE_KEY',
 ] as const;
 
 export function validateEnvironmentVariables() {
@@ -40,6 +40,20 @@ export function validateEnvironmentVariables() {
       warnings.push(envVar);
     }
   });
+
+  // Special check for Firebase - all or none
+  const firebaseVars = ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'];
+  const firebaseVarsPresent = firebaseVars.filter(envVar => process.env[envVar]);
+  
+  if (firebaseVarsPresent.length > 0 && firebaseVarsPresent.length < firebaseVars.length) {
+    const missingFirebase = firebaseVars.filter(envVar => !process.env[envVar]);
+    console.warn('⚠️ Partial Firebase configuration detected. Missing:', missingFirebase);
+    console.warn('Firebase features will be disabled. Set all Firebase variables to enable notifications.');
+  } else if (firebaseVarsPresent.length === firebaseVars.length) {
+    console.log('✅ Firebase configuration complete');
+  } else {
+    console.warn('⚠️ Firebase not configured. Notification features will be disabled.');
+  }
 
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:', missing);

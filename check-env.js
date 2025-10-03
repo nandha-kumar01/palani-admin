@@ -40,5 +40,3 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log('✅ All required environment variables are present');
-console.log('Available variables:', requiredVars.filter(v => process.env[v]).length + '/' + requiredVars.length);
