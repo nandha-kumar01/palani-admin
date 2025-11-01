@@ -47,10 +47,20 @@ export function validateEnvironmentVariables() {
   
   if (firebaseVarsPresent.length > 0 && firebaseVarsPresent.length < firebaseVars.length) {
     const missingFirebase = firebaseVars.filter(envVar => !process.env[envVar]);
+    console.warn(`Partial Firebase configuration - missing: ${missingFirebase.join(', ')}`);
   }
 
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    console.error(`Missing required environment variables: ${missing.join(', ')}`);
+    
+    // Only throw in development, log in production
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    }
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`Optional environment variables not set: ${warnings.join(', ')}`);
   }
 }
 
