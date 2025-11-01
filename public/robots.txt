@@ -1,0 +1,26 @@
+# Robots.txt for Palani Pathayathirai
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://palani-pathaiyathirai.com/sitemap.xml
+
+# Disallow admin areas from search engines
+Disallow: /admin/
+Disallow: /api/
+
+# Allow main content
+Allow: /
+Allow: /gallery
+Allow: /temples
+Allow: /announcements
+
+# Crawl delay for better server performance
+Crawl-delay: 1 /admin/
+Disallow: /api/
+
+# Allow specific public pages if any
+Allow: /
+
+# Sitemap location
+Sitemap: https://palani-pathayathirai.com/sitemap.xml

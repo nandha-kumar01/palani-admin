@@ -1,0 +1,43 @@
+{
+  "name": "Palani Pathayathirai - Divine Journey Platform",
+  "short_name": "Palani Pathayathirai",
+  "description": "Complete pilgrimage management platform for Lord Murugan devotees",
+  "theme_color": "#6366F1",
+  "background_color": "#F8FAFC",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["lifestyle", "travel", "productivity"],
+  "prefer_related_applications": false
+}

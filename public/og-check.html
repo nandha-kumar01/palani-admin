@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OG Image Test - Palani Pathayathirai</title>
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Palani Pathayathirai - Sacred Pilgrimage Platform" />
+    <meta property="og:description" content="Divine journey tracking for Lord Murugan devotees" />
+    <meta property="og:image" content="/opengraph-image.png" />
+    <meta property="og:image:width" content="928" />
+    <meta property="og:image:height" content="1120" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:url" content="http://localhost:3000/og-check.html" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Palani Pathayathirai - Sacred Pilgrimage Platform" />
+    <meta name="twitter:description" content="Divine journey tracking for Lord Murugan devotees" />
+    <meta name="twitter:image" content="/opengraph-image.png" />
+    
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛕 Palani Pathayathirai - OG Image Test</h1>
+    
+    <div class="test-section">
+        <h2>📊 OG Image Status Check</h2>
+        <div id="imageStatus"></div>
+        
+        <h3>🖼️ Image Preview:</h3>
+        <img id="ogImage" src="/opengraph-image.png" alt="OG Image Preview" onload="imageLoaded()" onerror="imageError()" />
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 Test Links</h2>
+        <ul>
+            <li><a href="/opengraph-image.png" target="_blank">Direct OG Image Link</a></li>
+            <li><a href="https://www.opengraph.xyz/" target="_blank">OpenGraph.xyz Validator</a></li>
+            <li><a href="https://developers.facebook.com/tools/debug/" target="_blank">Facebook Sharing Debugger</a></li>
+            <li><a href="https://cards-dev.twitter.com/validator" target="_blank">Twitter Card Validator</a></li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Technical Details</h2>
+        <ul>
+            <li><strong>Image Path:</strong> /opengraph-image.png</li>
+            <li><strong>Dimensions:</strong> 928 × 1120 pixels</li>
+            <li><strong>Format:</strong> PNG</li>
+            <li><strong>Size:</strong> ~1.3MB</li>
+            <li><strong>Source:</strong> Your logobg.png file</li>
+        </ul>
+    </div>
+    
+    <script>
+        function imageLoaded() {
+            document.getElementById('imageStatus').innerHTML = 
+                '<div class="status success">✅ SUCCESS: OG Image loaded successfully!</div>';
+        }
+        
+        function imageError() {
+            document.getElementById('imageStatus').innerHTML = 
+                '<div class="status error">❌ ERROR: Could not load OG image. Check if file exists.</div>';
+        }
+        
+        // Test image accessibility
+        fetch('/opengraph-image.png')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('imageStatus').innerHTML += 
+                        '<div class="status success">✅ OG Image is accessible via HTTP</div>';
+                } else {
+                    document.getElementById('imageStatus').innerHTML += 
+                        '<div class="status error">❌ OG Image HTTP response: ' + response.status + '</div>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('imageStatus').innerHTML += 
+                    '<div class="status error">❌ Network error accessing OG image</div>';
+            });
+    </script>
+</body>
+</html>

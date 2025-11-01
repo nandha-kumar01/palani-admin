@@ -1,0 +1,2 @@
+export declare function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage?: string): Promise<T>;
+export declare function handleApiError(error: any, defaultMessage?: string): { success: boolean; error: string };
