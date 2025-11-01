@@ -48,13 +48,24 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      socketTimeoutMS: 45000, // 45 second socket timeout
+      family: 4, // Use IPv4, skip trying IPv6
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionRetryMinDelay: 1000, // Wait 1 second before retrying
+      retryWrites: true,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('MongoDB connected successfully');
+      console.log('MongoDB connected successfully via Mongoose');
       return mongoose;
     }).catch((error) => {
-      console.error('MongoDB connection error:', error);
+      console.error('MongoDB connection error:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack?.substring(0, 500)
+      });
       cached.promise = null;
       throw error;
     });
@@ -62,9 +73,13 @@ async function dbConnect() {
 
   try {
     cached.conn = await cached.promise;
-  } catch (e) {
+  } catch (e: any) {
     cached.promise = null;
-    console.error('Failed to establish MongoDB connection:', e);
+    console.error('Failed to establish MongoDB connection:', {
+      message: e.message,
+      code: e.code,
+      name: e.name
+    });
     throw e;
   }
 
@@ -82,11 +97,22 @@ export async function connectDB(): Promise<Db> {
   
   if (!mongoClient) {
     try {
-      mongoClient = new MongoClient(MONGODB_URI);
+      mongoClient = new MongoClient(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        family: 4,
+        maxPoolSize: 10,
+        retryWrites: true,
+      });
       await mongoClient.connect();
       console.log('MongoDB native client connected successfully');
-    } catch (error) {
-      console.error('MongoDB native client connection error:', error);
+    } catch (error: any) {
+      console.error('MongoDB native client connection error:', {
+        message: error.message,
+        code: error.code,
+        name: error.name
+      });
+      mongoClient = null;
       throw error;
     }
   }
