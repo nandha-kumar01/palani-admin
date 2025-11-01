@@ -12,9 +12,11 @@
     "build:production": "NODE_ENV=production npm run build",
     "start:optimized": "NODE_ENV=production npm start",
     "clean": "rm -rf .next out node_modules/.cache",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "vercel-install": "npm install --legacy-peer-deps"
   },
   "dependencies": {
+    "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.1",
@@ -23,7 +25,6 @@
     "@mantine/notifications": "^8.3.5",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.4",
-    "@mui/material-nextjs": "^7.3.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.1",
     "autoprefixer": "^10.4.21",
@@ -39,7 +40,6 @@
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.2",
     "next": "^16.0.1",
-    "next-auth": "^4.24.11",
     "nodemailer": "^6.10.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
