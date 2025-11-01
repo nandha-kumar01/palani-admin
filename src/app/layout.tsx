@@ -7,6 +7,10 @@ import { Notifications } from '@mantine/notifications';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import './mantine.css';
+import { getBaseUrl } from '@/lib/url-utils';
+
+// Get the base URL for metadata
+const baseUrl = getBaseUrl();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    url: 'https://palani-pathaiyathirai.com',
+    url: baseUrl,
     siteName: 'Palani Pathaiyathirai - Divine Journey Platform',
     title: 'Palani Pathaiyathirai - Sacred Pilgrimage Management & Devotee Tracking System',
     description: 'Join the divine Pathaiyathirai to Palani Malai! Complete pilgrimage management platform for Lord Murugan devotees. Track your sacred journey, participate in annadhanam, connect with fellow pilgrims, and experience the blessed path to enlightenment.',
@@ -86,7 +90,7 @@ export const metadata: Metadata = {
     images: ['/opengraph-image.png'],
   },
   // Additional meta tags
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || 'https://palani-pathayathirai.com'),
+  metadataBase: new URL(baseUrl),
   alternates: {
     canonical: '/',
   },
@@ -160,7 +164,7 @@ export default function RootLayout({
         <meta property="og:country-name" content="India" />
         
         {/* Ensure OG image is properly loaded */}
-        <meta property="og:image:secure_url" content="https://palani-pathaiyathirai.com/opengraph-image.png" />
+        <meta property="og:image:secure_url" content={`${baseUrl}/opengraph-image.png`} />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="928" />
         <meta property="og:image:height" content="1120" />
@@ -176,9 +180,9 @@ export default function RootLayout({
               "name": "Palani Pathaiyathirai",
               "alternateName": "Palani Pathayathirai",
               "description": "Sacred pilgrimage management platform for Lord Murugan devotees",
-              "url": "https://palani-pathaiyathirai.com",
-              "logo": "https://palani-pathaiyathirai.com/logonobg.png",
-              "image": "https://palani-pathaiyathirai.com/opengraph-image.png",
+              "url": baseUrl,
+              "logo": `${baseUrl}/logonobg.png`,
+              "image": `${baseUrl}/opengraph-image.png`,
               "sameAs": [
                 "https://facebook.com/palanipathaiyathirai",
                 "https://instagram.com/palanipathaiyathirai",
