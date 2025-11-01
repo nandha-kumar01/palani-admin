@@ -40,3 +40,23 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// Validate URL formats
+function isValidUrl(string) {
+  try {
+    new URL(string.startsWith('http') ? string : `https://${string}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Check URL environment variables
+const urlVars = ['NEXT_PUBLIC_SITE_URL', 'VERCEL_URL'];
+urlVars.forEach(varName => {
+  if (process.env[varName] && !isValidUrl(process.env[varName])) {
+    console.warn(`⚠️  Warning: ${varName} may have invalid URL format: ${process.env[varName]}`);
+  }
+});
+
+console.log('✅ Environment validation passed');
+
