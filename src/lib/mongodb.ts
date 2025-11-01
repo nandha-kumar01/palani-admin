@@ -40,15 +40,8 @@ async function dbConnect() {
     return cached.conn;
   }
 
-  // Validate environment variables when actually connecting
-  try {
-    validateEnvironmentVariables();
-  } catch (error) {
-    console.error('Environment validation failed during connection:', error);
-    throw error;
-  }
-
   if (!MONGODB_URI) {
+    console.error('MONGODB_URI is not defined');
     throw new Error('MONGODB_URI is not defined');
   }
 
@@ -58,7 +51,12 @@ async function dbConnect() {
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('MongoDB connected successfully');
       return mongoose;
+    }).catch((error) => {
+      console.error('MongoDB connection error:', error);
+      cached.promise = null;
+      throw error;
     });
   }
 
@@ -66,6 +64,7 @@ async function dbConnect() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    console.error('Failed to establish MongoDB connection:', e);
     throw e;
   }
 
@@ -76,21 +75,20 @@ async function dbConnect() {
 let mongoClient: MongoClient | null = null;
 
 export async function connectDB(): Promise<Db> {
-  // Validate environment variables when actually connecting
-  try {
-    validateEnvironmentVariables();
-  } catch (error) {
-    console.error('Environment validation failed during connection:', error);
-    throw error;
-  }
-
   if (!MONGODB_URI) {
+    console.error('MONGODB_URI is not defined for native client');
     throw new Error('MONGODB_URI is not defined');
   }
   
   if (!mongoClient) {
-    mongoClient = new MongoClient(MONGODB_URI);
-    await mongoClient.connect();
+    try {
+      mongoClient = new MongoClient(MONGODB_URI);
+      await mongoClient.connect();
+      console.log('MongoDB native client connected successfully');
+    } catch (error) {
+      console.error('MongoDB native client connection error:', error);
+      throw error;
+    }
   }
   return mongoClient.db();
 }
