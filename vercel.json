@@ -1,5 +1,7 @@
 {
   "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
   "env": {
     "MONGODB_URI": "mongodb+srv://marinandhu659:X1BMVtt0fnEFHrxb@cluster0.rlgy9uh.mongodb.net/palani_pathayathirai",
     "NEXTAUTH_SECRET": "c1k2B2h3Xq+G7cFoX3m0yF42+ZupWm7LZjF6bV1t4Pg=",
