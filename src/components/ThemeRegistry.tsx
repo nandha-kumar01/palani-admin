@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
+import { CacheProvider } from '@emotion/react';
+import createCache from '@emotion/cache';
+
+// Create emotion cache for MUI
+const createEmotionCache = () => {
+  return createCache({ key: 'css', prepend: true });
+};
 
 const theme = createTheme({
   palette: {
@@ -94,6 +100,7 @@ export default function ThemeRegistry({
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [emotionCache] = useState(() => createEmotionCache());
 
   useEffect(() => {
     setMounted(true);
@@ -104,11 +111,11 @@ export default function ThemeRegistry({
   }
 
   return (
-    <AppRouterCacheProvider>
+    <CacheProvider value={emotionCache}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         {children}
       </ThemeProvider>
-    </AppRouterCacheProvider>
+    </CacheProvider>
   );
 }
