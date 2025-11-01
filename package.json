@@ -13,7 +13,8 @@
     "start:optimized": "NODE_ENV=production npm start",
     "clean": "rm -rf .next out node_modules/.cache",
     "type-check": "tsc --noEmit",
-    "vercel-install": "npm install --legacy-peer-deps"
+    "vercel-install": "npm install --legacy-peer-deps --silent",
+    "install:clean": "node scripts/install-clean.js"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -30,7 +31,7 @@
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
-    "cloudinary": "^2.7.0",
+    "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0",
