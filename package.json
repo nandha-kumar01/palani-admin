@@ -13,8 +13,8 @@
     "start:optimized": "NODE_ENV=production npm start",
     "clean": "rm -rf .next out node_modules/.cache",
     "type-check": "tsc --noEmit",
-    "vercel-install": "npm install --legacy-peer-deps --silent",
-    "install:clean": "node scripts/install-clean.js"
+    "vercel-install": "npm install --legacy-peer-deps --silent --no-fund --no-audit",
+    "install:clean": "npm install --legacy-peer-deps --silent --no-fund --no-audit"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
