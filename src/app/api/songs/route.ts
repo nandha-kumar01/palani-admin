@@ -12,6 +12,19 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// OPTIONS - Handle CORS preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 // GET - Fetch all songs
 export async function GET() {
   try {
@@ -32,7 +45,14 @@ export async function GET() {
     console.error('Error fetching songs:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch songs' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     );
   }
 }
@@ -72,19 +92,19 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Check audio file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Check audio file size (max 50MB for 5-minute songs)
+    if (file.size > 50 * 1024 * 1024) {
       return NextResponse.json(
-        { success: false, error: 'Audio file size must be less than 10MB' },
-        { status: 400 }
+        { success: false, error: 'Audio file size must be less than 50MB. For 5-minute songs, this should be sufficient.' },
+        { status: 413 }
       );
     }
     
-    // Check thumbnail file size (max 5MB)
-    if (thumbnail && thumbnail.size > 5 * 1024 * 1024) {
+    // Check thumbnail file size (max 10MB)
+    if (thumbnail && thumbnail.size > 10 * 1024 * 1024) {
       return NextResponse.json(
-        { success: false, error: 'Thumbnail file size must be less than 5MB' },
-        { status: 400 }
+        { success: false, error: 'Thumbnail file size must be less than 10MB' },
+        { status: 413 }
       );
     }
     
@@ -92,23 +112,34 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // Upload audio to Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'auto',
-          folder: 'palani-songs',
-          format: 'mp3',
-          transformation: [
-            { quality: 'auto' }
-          ]
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
-    }) as any;
+    // Upload audio to Cloudinary with increased timeout and better settings for large files
+    const uploadResult = await withTimeout(
+      new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'auto',
+            folder: 'palani-songs',
+            format: 'mp3',
+            transformation: [
+              { quality: 'auto' }
+            ],
+            // Increase timeout for large files
+            timeout: 120000, // 2 minutes
+            chunk_size: 6000000, // 6MB chunks for better upload reliability
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        ).end(buffer);
+      }),
+      180000, // 3 minutes timeout
+      'Cloudinary upload timeout - file may be too large'
+    ) as any;
     
     // Upload thumbnail to Cloudinary if provided
     let thumbnailResult = null;
@@ -116,25 +147,31 @@ export async function POST(request: NextRequest) {
       const thumbnailBytes = await thumbnail.arrayBuffer();
       const thumbnailBuffer = Buffer.from(thumbnailBytes);
       
-      thumbnailResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'image',
-            folder: 'palani-thumbnails',
-            transformation: [
-              { width: 300, height: 300, crop: 'fill' },
-              { quality: 'auto' }
-            ]
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
+      thumbnailResult = await withTimeout(
+        new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            {
+              resource_type: 'image',
+              folder: 'palani-thumbnails',
+              transformation: [
+                { width: 300, height: 300, crop: 'fill' },
+                { quality: 'auto' }
+              ],
+              timeout: 60000, // 1 minute timeout for thumbnails
+            },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary thumbnail upload error:', error);
+                reject(error);
+              } else {
+                resolve(result);
+              }
             }
-          }
-        ).end(thumbnailBuffer);
-      }) as any;
+          ).end(thumbnailBuffer);
+        }),
+        90000, // 1.5 minutes timeout
+        'Cloudinary thumbnail upload timeout'
+      ) as any;
     }
     
     // Create song record in database
@@ -161,13 +198,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: song
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
     });
     
   } catch (error: any) {
     console.error('Error uploading song:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to upload song' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     );
   }
 }
@@ -215,13 +265,26 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Song deleted successfully'
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      }
     });
     
   } catch (error: any) {
     console.error('Error deleting song:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete song' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     );
   }
 }
