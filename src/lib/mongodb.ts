@@ -6,7 +6,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-    console.error('Environment variables:', {
+    console.error('❌ MONGODB_URI missing in production:', {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL: process.env.VERCEL,
       VERCEL_ENV: process.env.VERCEL_ENV,
@@ -14,11 +14,16 @@ if (!MONGODB_URI) {
       all_env_keys: Object.keys(process.env).filter(key => key.includes('MONGO'))
     });
     throw new Error(
-      'Please define the MONGODB_URI environment variable inside .env.local or Vercel environment variables'
+      'MONGODB_URI environment variable is missing. Please add it in Vercel dashboard under Settings > Environment Variables'
     );
   } else {
     console.warn('⚠️ MONGODB_URI not found - database connections will fail');
   }
+}
+
+// Validate MongoDB URI format
+if (MONGODB_URI && !MONGODB_URI.startsWith('mongodb')) {
+  throw new Error('Invalid MONGODB_URI format. It should start with "mongodb://" or "mongodb+srv://"');
 }
 
 /**
@@ -52,11 +57,27 @@ async function dbConnect() {
         return mongoose;
       })
       .catch((error) => {
-        console.error('❌ MongoDB connection error:', {
+        // Enhanced error logging for authentication failures
+        const errorDetails = {
           message: error.message,
           code: error.code,
           name: error.name,
-        });
+          reason: error.reason,
+          isAuthError: error.message?.includes('authentication failed') || error.message?.includes('bad auth'),
+          uri_masked: MONGODB_URI ? MONGODB_URI.replace(/:[^:@]+@/, ':***@') : 'NOT_SET'
+        };
+        
+        console.error('❌ MongoDB connection error:', errorDetails);
+        
+        if (errorDetails.isAuthError) {
+          console.error('🔐 Authentication Error - Check these:');
+          console.error('1. Username and password are correct in MONGODB_URI');
+          console.error('2. Database user has proper permissions');
+          console.error('3. IP address is whitelisted in MongoDB Atlas');
+          console.error('4. Network access is configured correctly');
+          console.error('5. Connection string format: mongodb+srv://username:password@cluster.mongodb.net/database');
+        }
+        
         cached.promise = null;
         throw error;
       });
@@ -97,11 +118,25 @@ export async function connectDB(): Promise<Db> {
       await mongoClient.connect();
       console.log('✅ MongoDB native client connected successfully');
     } catch (error: any) {
-      console.error('❌ MongoDB native client connection error:', {
+      const errorDetails = {
         message: error.message,
         code: error.code,
         name: error.name,
-      });
+        reason: error.reason,
+        isAuthError: error.message?.includes('authentication failed') || error.message?.includes('bad auth'),
+        uri_masked: MONGODB_URI ? MONGODB_URI.replace(/:[^:@]+@/, ':***@') : 'NOT_SET'
+      };
+      
+      console.error('❌ MongoDB native client connection error:', errorDetails);
+      
+      if (errorDetails.isAuthError) {
+        console.error('🔐 Native Client Authentication Error - Check these:');
+        console.error('1. Username and password are correct in MONGODB_URI');
+        console.error('2. Database user has proper permissions');
+        console.error('3. IP address is whitelisted in MongoDB Atlas');
+        console.error('4. Network access is configured correctly');
+      }
+      
       mongoClient = null;
       throw error;
     }
