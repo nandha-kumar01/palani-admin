@@ -3,9 +3,9 @@
   "installCommand": "npm run install:clean",
   "buildCommand": "npm run build",
   "env": {
-    "MONGODB_URI": "mongodb+srv://marinandhu659:X1BMVtt0fnEFHrxb@cluster0.rlgy9uh.mongodb.net/palani_pathayathirai",
+    "MONGODB_URI": "mongodb+srv://marinandhu659:DlaVD5sOpNyCrW5W@cluster0.rlgy9uh.mongodb.net/palani_pathayathirai",
     "NEXTAUTH_SECRET": "c1k2B2h3Xq+G7cFoX3m0yF42+ZupWm7LZjF6bV1t4Pg=",
-    "NEXTAUTH_URL": "https://palani-web.vercel.app",
+    "NEXTAUTH_URL": "https://palani-admin.vercel.app",
     "JWT_SECRET": "8754949307",
     "FIREBASE_PROJECT_ID": "palani-pathaiyathrai",
     "FIREBASE_CLIENT_EMAIL": "firebase-adminsdk-fbsvc@palani-pathaiyathrai.iam.gserviceaccount.com",
