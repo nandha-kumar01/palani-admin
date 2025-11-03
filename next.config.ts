@@ -2,12 +2,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ✅ PWA and Mobile Optimizations
+  // ✅ File upload configurations for large files (songs)
   experimental: {
     webpackBuildWorker: true,
     optimizeCss: true,
     optimizePackageImports: ['@mui/material', '@mui/icons-material', '@mantine/core'],
   },
+
+  // ✅ Server external packages (moved from experimental)
+  serverExternalPackages: ['sharp'],
 
   // ✅ Performance optimizations
   compress: true,
