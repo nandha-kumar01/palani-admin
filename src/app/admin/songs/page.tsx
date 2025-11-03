@@ -53,6 +53,7 @@ import {
   RestartAlt,
   Image,
 } from '@mui/icons-material';
+import { LinearProgress } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -143,6 +144,7 @@ export default function SongsPage() {
   const [loading, setLoading] = useState(true); // Start with loading true
   const [showLoadingAnimation, setShowLoadingAnimation] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -331,12 +333,22 @@ export default function SongsPage() {
       return;
     }
 
+    // Check file size (max 50MB for 5-minute songs)
+    if (file.size > 50 * 1024 * 1024) {
+      showNotification('Audio file size must be less than 50MB. For 5-minute songs, this should be sufficient.', 'error');
+      return;
+    }
+
     // Validate thumbnail if provided
     if (data.thumbnail && data.thumbnail.length > 0 && data.thumbnail[0].size > 0) {
       const thumbnail = data.thumbnail[0];
       const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
       if (!validImageTypes.includes(thumbnail.type)) {
         showNotification('Thumbnail must be in JPG, JPEG, or PNG format', 'error');
+        return;
+      }
+      if (thumbnail.size > 10 * 1024 * 1024) {
+        showNotification('Thumbnail size must be less than 10MB', 'error');
         return;
       }
     }
@@ -353,12 +365,53 @@ export default function SongsPage() {
     }
 
     try {
-      const response = await fetch('/api/songs', {
-        method: 'POST',
-        body: formData,
+      // Show initial progress
+      setUploadProgress(10);
+      
+      const xhr = new XMLHttpRequest();
+      
+      const uploadPromise = new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 90); // Reserve 10% for processing
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.addEventListener('load', () => {
+          setUploadProgress(95);
+          if (xhr.status === 200) {
+            try {
+              const result = JSON.parse(xhr.responseText);
+              resolve(result);
+            } catch (e) {
+              reject(new Error('Invalid response format'));
+            }
+          } else {
+            try {
+              const result = JSON.parse(xhr.responseText);
+              reject(new Error(result.error || `Upload failed with status ${xhr.status}`));
+            } catch (e) {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          }
+        });
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error during upload'));
+        });
+
+        xhr.addEventListener('timeout', () => {
+          reject(new Error('Upload timeout - file may be too large'));
+        });
+
+        xhr.open('POST', '/api/songs');
+        xhr.timeout = 300000; // 5 minutes timeout
+        xhr.send(formData);
       });
 
-      const result = await response.json();
+      const result = await uploadPromise as any;
+      setUploadProgress(100);
 
       if (result.success) {
         showNotification('Song uploaded successfully!', 'success');
@@ -368,10 +421,18 @@ export default function SongsPage() {
       } else {
         showNotification(result.error || 'Failed to upload song', 'error');
       }
-    } catch (error) {
-      showNotification('Error uploading song', 'error');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      if (error.message.includes('timeout')) {
+        showNotification('Upload timeout - please try with a smaller file or check your connection', 'error');
+      } else if (error.message.includes('413') || error.message.includes('too large')) {
+        showNotification('File too large - please compress the audio file', 'error');
+      } else {
+        showNotification(error.message || 'Error uploading song', 'error');
+      }
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -1000,10 +1061,10 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                 variant="outlined"
                 component="label"
                 fullWidth
-                sx={{ mt: 2, mb: 2, py: 2 }}
+                sx={{ mt: 2, mb: 1, py: 2 }}
                 startIcon={<CloudUpload />}
               >
-                Choose Audio File
+                Choose Audio File (up to 50MB)
                 <input
                   type="file"
                   hidden
@@ -1011,6 +1072,7 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                   {...register('file', { required: 'Audio file is required' })}
                 />
               </Button>
+            
               
               {watchedFile && watchedFile.length > 0 && (
                 <Alert severity="info" sx={{ mb: 2 }}>
@@ -1050,6 +1112,33 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {errors.thumbnail.message}
                 </Alert>
+              )}
+
+              {/* Upload Progress Bar */}
+              {uploading && (
+                <Box sx={{ mb: 2 }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      Uploading... {uploadProgress}%
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {uploadProgress < 90 ? 'Uploading file...' : 'Processing...'}
+                    </Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={uploadProgress} 
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: '#e0e0e0',
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 4,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      }
+                    }}
+                  />
+                </Box>
               )}
             </Box>
           </DialogContent>
