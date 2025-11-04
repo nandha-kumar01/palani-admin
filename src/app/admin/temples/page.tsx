@@ -521,7 +521,7 @@ export default function TemplesPage() {
                 textShadow: '0 2px 4px rgba(102, 126, 234, 0.2)',
               }}
             >
-              Loading Users..
+              Loading Temples..
             </Typography>
             <style jsx>{`
               @keyframes smoothFadeInOut {
