@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Quote from '@/models/Quote';
+import User from '@/models/User'; // Import User model to register schema
 import { withAuth } from '@/lib/middleware';
 import { withTimeout } from '@/lib/apiTimeout';
 
