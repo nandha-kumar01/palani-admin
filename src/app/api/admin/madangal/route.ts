@@ -11,15 +11,22 @@ async function getMadangals(request: NextRequest) {
   try {
     await dbConnect();
     
-    const madangals = await withTimeout(Madangal.find({}).maxTimeMS(10000)
-      .populate('bookings.userId', 'name email phone')
-      .sort({ createdAt: -1 }), 15000, 'Database operation timeout');
+    const madangals = await withTimeout(
+      Madangal.find({})
+        .maxTimeMS(10000)
+        .populate('bookings.userId', 'name email phone')
+        .sort({ createdAt: -1 })
+        .exec(),
+      15000,
+      'Database operation timeout'
+    );
 
     return NextResponse.json({ 
       success: true, 
       madangals 
     });
   } catch (error) {
+    console.error('Error fetching madangals:', error);
     return NextResponse.json(
       { error: 'Failed to get madangals' },
       { status: 500 }
@@ -77,7 +84,11 @@ async function createMadangal(request: NextRequest) {
       bookings: [],
     });
 
-    const savedMadangal = await withTimeout(newMadangal.save(), 15000, 'Database operation timeout');
+    const savedMadangal = await withTimeout(
+      newMadangal.save(),
+      15000,
+      'Database operation timeout'
+    );
 
     return NextResponse.json({
       success: true,
@@ -85,6 +96,7 @@ async function createMadangal(request: NextRequest) {
       madangal: savedMadangal,
     });
   } catch (error) {
+    console.error('Error creating madangal:', error);
     return NextResponse.json(
       { error: 'Failed to create madangal' },
       { status: 500 }
