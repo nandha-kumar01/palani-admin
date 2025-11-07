@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Announcement from '@/models/Announcement';
+import User from '@/models/User'; // Import User model to register schema for populate
 import { withAuth } from '@/lib/middleware';
 import { withTimeout, handleApiError } from '@/lib/apiTimeout';
 
