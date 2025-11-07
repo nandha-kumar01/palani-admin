@@ -2,11 +2,29 @@ import mongoose from 'mongoose';
 import { MongoClient, Db } from 'mongodb';
 import { validateEnvironmentVariables } from './env-validation';
 
+// Import all models at the top to ensure they're registered
+// This prevents "Schema hasn't been registered" errors in production
+import User from '@/models/User';
+import Quote from '@/models/Quote';
+import Temple from '@/models/Temple';
+import Annadhanam from '@/models/Annadhanam';
+import Madangal from '@/models/Madangal';
+import Song from '@/models/Song';
+import Gallery from '@/models/Gallery';
+import Group from '@/models/Group';
+import Announcement from '@/models/Announcement';
+import Notification from '@/models/Notification';
+import Device from '@/models/Device';
+import Country from '@/models/Country';
+import State from '@/models/State';
+import City from '@/models/City';
+import UserSupport from '@/models/UserSupport';
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-    console.error('❌ MONGODB_URI missing in production:', {
+    console.error('Environment variables:', {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL: process.env.VERCEL,
       VERCEL_ENV: process.env.VERCEL_ENV,
@@ -14,16 +32,11 @@ if (!MONGODB_URI) {
       all_env_keys: Object.keys(process.env).filter(key => key.includes('MONGO'))
     });
     throw new Error(
-      'MONGODB_URI environment variable is missing. Please add it in Vercel dashboard under Settings > Environment Variables'
+      'Please define the MONGODB_URI environment variable inside .env.local or Vercel environment variables'
     );
   } else {
     console.warn('⚠️ MONGODB_URI not found - database connections will fail');
   }
-}
-
-// Validate MongoDB URI format
-if (MONGODB_URI && !MONGODB_URI.startsWith('mongodb')) {
-  throw new Error('Invalid MONGODB_URI format. It should start with "mongodb://" or "mongodb+srv://"');
 }
 
 /**
@@ -54,30 +67,15 @@ async function dbConnect() {
       .connect(MONGODB_URI, opts)
       .then((mongoose) => {
         console.log('✅ MongoDB connected successfully via Mongoose');
+        console.log('✅ All models registered:', Object.keys(mongoose.models).join(', '));
         return mongoose;
       })
       .catch((error) => {
-        // Enhanced error logging for authentication failures
-        const errorDetails = {
+        console.error('❌ MongoDB connection error:', {
           message: error.message,
           code: error.code,
           name: error.name,
-          reason: error.reason,
-          isAuthError: error.message?.includes('authentication failed') || error.message?.includes('bad auth'),
-          uri_masked: MONGODB_URI ? MONGODB_URI.replace(/:[^:@]+@/, ':***@') : 'NOT_SET'
-        };
-        
-        console.error('❌ MongoDB connection error:', errorDetails);
-        
-        if (errorDetails.isAuthError) {
-          console.error('🔐 Authentication Error - Check these:');
-          console.error('1. Username and password are correct in MONGODB_URI');
-          console.error('2. Database user has proper permissions');
-          console.error('3. IP address is whitelisted in MongoDB Atlas');
-          console.error('4. Network access is configured correctly');
-          console.error('5. Connection string format: mongodb+srv://username:password@cluster.mongodb.net/database');
-        }
-        
+        });
         cached.promise = null;
         throw error;
       });
@@ -118,25 +116,11 @@ export async function connectDB(): Promise<Db> {
       await mongoClient.connect();
       console.log('✅ MongoDB native client connected successfully');
     } catch (error: any) {
-      const errorDetails = {
+      console.error('❌ MongoDB native client connection error:', {
         message: error.message,
         code: error.code,
         name: error.name,
-        reason: error.reason,
-        isAuthError: error.message?.includes('authentication failed') || error.message?.includes('bad auth'),
-        uri_masked: MONGODB_URI ? MONGODB_URI.replace(/:[^:@]+@/, ':***@') : 'NOT_SET'
-      };
-      
-      console.error('❌ MongoDB native client connection error:', errorDetails);
-      
-      if (errorDetails.isAuthError) {
-        console.error('🔐 Native Client Authentication Error - Check these:');
-        console.error('1. Username and password are correct in MONGODB_URI');
-        console.error('2. Database user has proper permissions');
-        console.error('3. IP address is whitelisted in MongoDB Atlas');
-        console.error('4. Network access is configured correctly');
-      }
-      
+      });
       mongoClient = null;
       throw error;
     }
