@@ -2,9 +2,15 @@
   "framework": "nextjs",
   "installCommand": "npm run install:clean",
   "buildCommand": "npm run build",
-    "functions": {
+  "functions": {
     "src/app/api/songs/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/admin/madangal/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/admin/madangal/[id]/route.ts": {
+      "maxDuration": 30
     }
   },
   "env": {
