@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { apiRequest } from '@/lib/apiTimeout';
+import authUtils from '@/lib/authUtils';
 import {
   Box,
   Card,
@@ -340,23 +342,31 @@ export default function MadangalPage() {
     showNotification('Filters reset successfully!', 'info');
   };
 
-  const fetchMadangals = async () => {
+  const fetchMadangals = useCallback(async () => {
     setLoading(true);
     setStatsLoading(true);
+    
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/admin/madangal', {
+      // Check authentication first
+      const token = authUtils.getValidToken();
+      if (!token) {
+        showNotification('Session expired. Please login again.', 'error');
+        authUtils.clearSessionAndRedirect();
+        return;
+      }
+      
+      // Use enhanced API request utility
+      const result = await apiRequest('/api/admin/madangal', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-      });
+      }, 2); // 2 retries
 
-      if (response.ok) {
-        const data = await response.json();
-        const madangalsData = data.madangals || [];
+      if (result.success && result.data) {
+        const madangalsData = result.data.madangals || [];
         setMadangals(madangalsData);
         
-        // Calculate accurate stats
+        // Calculate stats
         const total = madangalsData.length;
         const active = madangalsData.filter((item: Madangal) => item.isActive === true).length;
         const available = madangalsData.filter((item: Madangal) => 
@@ -366,19 +376,34 @@ export default function MadangalPage() {
         const totalCapacity = madangalsData.reduce((sum: number, item: Madangal) => {
           return sum + (item.capacity || 0);
         }, 0);
-   
         
         setStats({ total, active, available, totalCapacity });
+        console.log(`✅ Loaded ${madangalsData.length} madangals successfully`);
+        
       } else {
-        showNotification('Failed to fetch madangals', 'error');
+        // Handle API errors
+        if (result.status === 401) {
+          showNotification('Session expired. Please login again.', 'error');
+          authUtils.clearSessionAndRedirect();
+          return;
+        }
+        
+        if (result.status === 403) {
+          showNotification('Access denied. Admin privileges required.', 'error');
+          return;
+        }
+        
+        showNotification(result.error || 'Failed to load madangals', 'error');
       }
-    } catch (error) {
-      showNotification('Network error', 'error');
+      
+    } catch (error: any) {
+      console.error('❌ Fetch error:', error);
+      showNotification('Network error. Please check your connection.', 'error');
     } finally {
       setLoading(false);
       setStatsLoading(false);
     }
-  };
+  }, []);
 
   const handleOpenDialog = (madangal?: Madangal) => {
     if (madangal) {
@@ -795,7 +820,7 @@ export default function MadangalPage() {
               <Box display="flex" alignItems="center" gap={2}>
                 <Button 
                   variant="outlined" 
-                  onClick={fetchMadangals}
+                  onClick={() => fetchMadangals()}
                   sx={{
                     borderColor: '#e0e0e0',
                     color: '#666',
