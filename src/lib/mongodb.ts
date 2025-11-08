@@ -4,21 +4,21 @@ import { validateEnvironmentVariables } from './env-validation';
 
 // Import all models at the top to ensure they're registered
 // This prevents "Schema hasn't been registered" errors in production
-import User from '@/models/User';
-import Quote from '@/models/Quote';
-import Temple from '@/models/Temple';
-import Annadhanam from '@/models/Annadhanam';
-import Madangal from '@/models/Madangal';
-import Song from '@/models/Song';
-import Gallery from '@/models/Gallery';
-import Group from '@/models/Group';
-import Announcement from '@/models/Announcement';
-import Notification from '@/models/Notification';
-import Device from '@/models/Device';
-import Country from '@/models/Country';
-import State from '@/models/State';
-import City from '@/models/City';
-import UserSupport from '@/models/UserSupport';
+import '@/models/User';
+import '@/models/Quote';
+import '@/models/Temple';
+import '@/models/Annadhanam';
+import '@/models/Madangal';
+import '@/models/Song';
+import '@/models/Gallery';
+import '@/models/Group';
+import '@/models/Announcement';
+import '@/models/Notification';
+import '@/models/Device';
+import '@/models/Country';
+import '@/models/State';
+import '@/models/City';
+import '@/models/UserSupport';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
