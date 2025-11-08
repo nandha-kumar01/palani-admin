@@ -49,33 +49,87 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  if (cached.conn) return cached.conn;
+  // In serverless environments, always check connection state
+  if (cached.conn) {
+    const state = cached.conn.connection.readyState;
+    
+    // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+    if (state === 1) {
+      // Connection is healthy
+      return cached.conn;
+    } else if (state === 2) {
+      // Currently connecting, wait for the existing promise
+      try {
+        return await cached.promise;
+      } catch (e) {
+        // Connection failed, reset and try again
+        cached.conn = null;
+        cached.promise = null;
+      }
+    } else {
+      // Connection is stale or disconnected, reset
+      cached.conn = null;
+      cached.promise = null;
+    }
+  }
 
   if (!MONGODB_URI) throw new Error('MONGODB_URI is not defined');
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      // Core connection settings
+      serverSelectionTimeoutMS: 15000, // 15 second timeout
       socketTimeoutMS: 45000, // 45 second socket timeout
+      connectTimeoutMS: 15000, // 15 second connection timeout
       family: 4, // Use IPv4
-      maxPoolSize: 10, // Maintain up to 10 connections
-      retryWrites: true, // Safe for cluster writes
+      
+      // Connection pool settings (optimized for serverless)
+      maxPoolSize: 3, // Small pool for serverless
+      minPoolSize: 0, // Allow connections to close
+      maxIdleTimeMS: 30000, // Close idle connections after 30s
+      waitQueueTimeoutMS: 15000, // Queue timeout
+      
+      // Reliability settings
+      retryWrites: true,
+      heartbeatFrequencyMS: 10000, // Health check every 10s
+      
+      // Performance optimizations
+      compressors: ['zlib'] as ('zlib' | 'none' | 'snappy' | 'zstd')[],
+      readPreference: 'primaryPreferred' as const,
     };
 
     cached.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((mongoose) => {
         console.log('✅ MongoDB connected successfully via Mongoose');
-        console.log('✅ All models registered:', Object.keys(mongoose.models).join(', '));
+        console.log('🔧 Connection state:', mongoose.connection.readyState);
+        console.log('📊 Registered models:', Object.keys(mongoose.models).length);
+        
+        // Add connection event listeners for better monitoring
+        mongoose.connection.on('connected', () => {
+          console.log('📡 Mongoose connected to MongoDB');
+        });
+        
+        mongoose.connection.on('error', (err) => {
+          console.error('❌ Mongoose connection error:', err);
+        });
+        
+        mongoose.connection.on('disconnected', () => {
+          console.log('📡 Mongoose disconnected from MongoDB');
+        });
+        
         return mongoose;
       })
       .catch((error) => {
-        console.error('❌ MongoDB connection error:', {
+        console.error('❌ MongoDB connection failed:', {
           message: error.message,
           code: error.code,
           name: error.name,
+          timestamp: new Date().toISOString()
         });
+        
+        // Reset promise on failure
         cached.promise = null;
         throw error;
       });
@@ -83,17 +137,27 @@ async function dbConnect() {
 
   try {
     cached.conn = await cached.promise;
+    
+    // Final health check
+    if (cached.conn.connection.readyState !== 1) {
+      throw new Error(`Connection established but not ready. State: ${cached.conn.connection.readyState}`);
+    }
+    
+    return cached.conn;
+    
   } catch (e: any) {
     cached.promise = null;
+    cached.conn = null;
+    
     console.error('❌ Failed to establish MongoDB connection:', {
       message: e.message,
       code: e.code,
       name: e.name,
+      timestamp: new Date().toISOString()
     });
+    
     throw e;
   }
-
-  return cached.conn;
 }
 
 /**
