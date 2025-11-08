@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
-import Madangal from '@/models/Madangal';
-import User from '@/models/User';
+import { ensureModelsRegistered } from '@/lib/ensureModels';
+import { Madangal, User } from '@/models';
 import { withAuth } from '@/lib/middleware';
 import { withTimeout, withRetry } from '@/lib/apiTimeout';
 
 // GET all madangals
 async function getMadangals(request: NextRequest) {
   try {
+    // Ensure all models are registered
+    await ensureModelsRegistered();
+    
     // Validate environment
     if (!process.env.MONGODB_URI) {
       throw new Error('MongoDB URI not configured');
@@ -29,11 +32,6 @@ async function getMadangals(request: NextRequest) {
     const madangals = await withTimeout(
       Madangal.find({})
         .maxTimeMS(20000)
-        .populate({
-          path: 'bookings.userId',
-          select: 'name email phone',
-          options: { maxTimeMS: 5000 }
-        })
         .sort({ createdAt: -1 })
         .lean(true)
         .exec(),
@@ -73,7 +71,7 @@ async function getMadangals(request: NextRequest) {
 
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: 'Failed to fetch madangals',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
@@ -82,6 +80,9 @@ async function getMadangals(request: NextRequest) {
 // POST - Create new madangal
 async function createMadangal(request: NextRequest) {
   try {
+    // Ensure all models are registered
+    await ensureModelsRegistered();
+    
     const body = await request.json();
     const {
       name,
