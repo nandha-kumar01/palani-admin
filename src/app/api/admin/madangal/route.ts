@@ -73,7 +73,7 @@ async function getMadangals(request: NextRequest) {
 
     return NextResponse.json({
       success: false,
-      error: 'Failed to fetch madangals',
+      error: error.message,
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
