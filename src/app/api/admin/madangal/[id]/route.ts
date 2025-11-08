@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
-import Madangal from '@/models/Madangal';
-import User from '@/models/User';
+import { ensureModelsRegistered } from '@/lib/ensureModels';
+import { Madangal, User } from '@/models';
 import { withAuth } from '@/lib/middleware';
 import { withTimeout, withRetry } from '@/lib/apiTimeout';
 
 // GET single madangal by ID
 async function getMadangal(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Ensure all models are registered
+    await ensureModelsRegistered();
+    
     const { id } = await params;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -28,11 +31,6 @@ async function getMadangal(request: NextRequest, { params }: { params: Promise<{
     const madangal = await withTimeout(
       Madangal.findById(id)
         .maxTimeMS(15000)
-        .populate({
-          path: 'bookings.userId',
-          select: 'name email phone',
-          options: { maxTimeMS: 5000 }
-        })
         .lean(true)
         .exec(),
       20000,
@@ -83,6 +81,9 @@ async function getMadangal(request: NextRequest, { params }: { params: Promise<{
 // PUT - Update madangal by ID
 async function updateMadangal(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Ensure all models are registered
+    await ensureModelsRegistered();
+    
     const { id } = await params;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -184,6 +185,9 @@ async function updateMadangal(request: NextRequest, { params }: { params: Promis
 // DELETE madangal by ID
 async function deleteMadangal(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // Ensure all models are registered
+    await ensureModelsRegistered();
+    
     const { id } = await params;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
