@@ -2,14 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { ensureModelsRegistered } from '@/lib/ensureModels';
 import { User } from '@/models';
+import { sendOTPEmail } from '@/lib/emailService';
+import crypto from 'crypto';
 
 // Generate 6-digit OTP
 function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if email service is configured
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Email service not configured. Please contact administrator.' 
+        },
+        { status: 500 }
+      );
+    }
+
     // Ensure models are registered
     await ensureModelsRegistered();
     
@@ -29,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, error: 'User not found' },
+        { success: false, error: 'User not found with this email' },
         { status: 404 }
       );
     }
@@ -43,18 +56,27 @@ export async function POST(request: NextRequest) {
     user.resetPasswordExpiry = otpExpiry;
     await user.save();
 
-    // In production, send OTP via email/SMS
-    // For now, return OTP in response (remove in production)
-    console.log(`📧 OTP for ${email}: ${otp}`);
-
-    // TODO: Send OTP via email service
-    // await sendOTPEmail(email, otp);
+    // Send OTP via email
+    try {
+      await sendOTPEmail(email, otp, 'resend');
+      console.log(`✅ OTP resent successfully to ${email}`);
+    } catch (emailError: any) {
+      console.error('Email sending failed:', emailError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Failed to send email. Please try again later.',
+          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { 
         success: true, 
-        message: 'OTP sent successfully',
-        // Remove this in production - for testing only
+        message: 'New OTP sent successfully to your email',
+        // Show OTP in development mode only for testing
         ...(process.env.NODE_ENV === 'development' && { otp })
       },
       { status: 200 }
@@ -62,8 +84,21 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Resend OTP error:', error);
+    
+    // Handle specific errors
+    if (error.message?.includes('Email service')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { success: false, error: 'Failed to resend OTP' },
+      { 
+        success: false, 
+        error: 'Failed to resend OTP. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
