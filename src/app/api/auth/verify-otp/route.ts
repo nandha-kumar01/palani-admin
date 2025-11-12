@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
+import { ensureModelsRegistered } from '@/lib/ensureModels';
+import { User } from '@/models';
 
 export async function POST(request: NextRequest) {
   try {
+    // Ensure models are registered
+    await ensureModelsRegistered();
+    
     const { email, otp } = await request.json();
 
     if (!email || !otp) {
