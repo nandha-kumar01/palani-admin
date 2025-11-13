@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
-import Group from '@/models/Group';
+import { ensureModelsRegistered } from '@/lib/ensureModels';
+import { User, Group } from '@/models';
 import { generateToken, generateRefreshToken } from '@/lib/auth';
 import { withTimeout } from '@/lib/apiTimeout';
 
 export async function POST(request: NextRequest) {
   try {
+    // Ensure models are registered
+    await ensureModelsRegistered();
+    
     await dbConnect();
     
     const { email, otp } = await request.json();
@@ -61,13 +64,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Activate the user account and clear OTP data
-    tempUser.isActive = true;
-    tempUser.resetPasswordOTP = undefined;
-    tempUser.resetPasswordExpiry = undefined;
-    tempUser.status = 'active';
+    // Activate the user account completely and clear OTP data
+    tempUser.isActive = true; // Set isActive to true
+    tempUser.status = 'active'; // Set status to 'active'
+    tempUser.resetPasswordOTP = undefined; // Clear OTP
+    tempUser.resetPasswordExpiry = undefined; // Clear OTP expiry
+    tempUser.lastLogin = new Date(); // Set first login time
     
+    // Save the activated user
     await withTimeout(tempUser.save(), 15000, 'Database operation timeout');
+    
+  
 
     // Add user to group if selected
     if (selectedGroup) {
@@ -95,10 +102,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Email verified and user registered successfully',
+      message: 'Email verified and account activated successfully! You can now login.',
+      accountActivated: true,
       user: {
         ...userWithoutPassword,
         groupName: selectedGroup ? selectedGroup.name : null,
+        isActive: true, // Confirm active status
+        status: 'active' // Confirm active status
       },
       accessToken,
       refreshToken,
