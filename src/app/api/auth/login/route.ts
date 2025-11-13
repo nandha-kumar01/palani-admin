@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
       isActive: user.isActive,
       status: user.status,
       isAdmin: user.isAdmin,
-      hasOTP: !!user.resetPasswordOTP
+      hasOTP: !!user.resetPasswordOTP,
+      otpExpired: user.resetPasswordExpiry ? new Date() > user.resetPasswordExpiry : false
     });
 
     // Check if user is active
@@ -89,12 +90,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has pending OTP verification
-    if (user.resetPasswordOTP || user.resetPasswordExpiry) {
-      return NextResponse.json(
-        { error: 'Please complete your registration by verifying your email first' },
-        { status: 401 }
-      );
+    // Check if user has valid (non-expired) pending OTP verification
+    // Only block if OTP exists AND is not expired
+    if (user.resetPasswordOTP && user.resetPasswordExpiry) {
+      const now = new Date();
+      const isOTPExpired = now > user.resetPasswordExpiry;
+      
+      // If OTP is expired, clear it and allow login
+      if (isOTPExpired) {
+        user.resetPasswordOTP = undefined;
+        user.resetPasswordExpiry = undefined;
+        await user.save();
+        console.log('Cleared expired OTP for user:', email);
+      } else if (!user.isAdmin) {
+        // OTP is still valid and user is not admin, require verification
+        return NextResponse.json(
+          { error: 'Please complete your registration by verifying your email first' },
+          { status: 401 }
+        );
+      }
     }
 
     // Check password
@@ -129,6 +143,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Login successful for:', email);
     return NextResponse.json({
+      success: true,
       message: 'Login successful',
       user: userWithoutPassword,
       accessToken,
