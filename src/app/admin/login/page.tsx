@@ -210,111 +210,120 @@ export default function AdminLogin() {
 
   return (
     <ThemeRegistry>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 3,
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: 1200,
-            width: '95%',
-            height: '700px',
-            background: '#FFFFFF',
-            borderRadius: '25px',
-            border: '4px solid #667eea',
-            boxShadow: '0 20px 40px #5a548f',
-            overflow: 'hidden',
-            display: 'flex',
-          }}
-        >
+     <Box
+  sx={{
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    p: { xs: 1.5, sm: 2, md: 3 },
+  }}
+>
+
+       <Box
+  sx={{
+    maxWidth: 1200,
+    width: '100%',
+    height: { xs: 'auto', md: '700px' },
+    background: '#FFFFFF',
+    borderRadius: { xs: '16px', md: '25px' },
+    border: '4px solid #667eea',
+    boxShadow: '0 20px 40px #5a548f',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: { xs: 'column', md: 'row' },
+  }}
+>
+
           {/* Left side - Deity Image */}
-          <Box 
-            sx={{
-              width: '50%',
-              height: '100%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              padding: 3,
-            }}
-          >
+        <Box
+  sx={{
+    width: '50%',
+    display: { xs: 'none', md: 'flex' },
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    p: 3,
+  }}
+>
+
             <Box
-              sx={{
-                width: '450px',
-                height: '600px',
-                borderRadius: '20px',
-                backgroundImage: 'url(https://res.cloudinary.com/dy5vca5ux/image/upload/v1756896573/LoginImg_xgfaka.png)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
+             sx={{
+    width: '100%',
+    maxWidth: 450,
+    height: 600,
+    borderRadius: '20px',
+    backgroundImage: 'url(https://res.cloudinary.com/dy5vca5ux/image/upload/v1756896573/LoginImg_xgfaka.png)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+ backgroundRepeat: 'no-repeat',
                 border: '4px solid rgba(255,255,255,0.4)',
-                boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
-              }}
+                boxShadow: '0 15px 40px rgba(0,0,0,0.3)',  }}
             >
            
             </Box>
           </Box>
 
           {/* Right side - Login Form */}
-          <Box 
-            sx={{
-              width: '55%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#f5f2f2',
-              padding: 5,
-            }}
-          >
+          <Box
+  sx={{
+    width: { xs: '100%', md: '55%' },
+    minHeight: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#f5f2f2',
+    p: { xs: 3, sm: 4, md: 5 },
+  }}
+>
+
             {/* Header */}
             <Box
               sx={{
-                width: '450px',
-                textAlign: 'center',
-                mb: 4,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '20px',
-                py: 3.5,
-                px: 4,
+                  width: '100%',
+    maxWidth: 450,
+    textAlign: 'center',
+    mb: 4,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '20px',
+    py: { xs: 2.5, md: 3.5 },
+    px: 3,
                 color: 'white',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
                 boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
               }}
             >
-              <Typography 
-                variant="h3" 
-                component="h1" 
-                sx={{ 
-                  fontWeight: 'bold',
+              <Typography
+    sx={{
+fontWeight: 'bold',
                   mb: 1,
-                  fontSize: '1.8rem',
-                  letterSpacing: '2px'
-                }}
-              >
-                PALANI PATHAIYATHIRAI
-              </Typography>
+      fontSize: { xs: '1.3rem', sm: '1.6rem', md: '1.8rem' },
+      letterSpacing: '1.5px',
+      color: 'black',
+    }}
+  >
+    PALANI PATHAIYATHIRAI
+  </Typography>
               <Typography 
                 variant="h6" 
                 sx={{ 
                   opacity: 0.95,
                   fontSize: '1.1rem',
-                  fontWeight: 500
+                  fontWeight: 700,
+                color:"black",
+    //              textShadow: `
+    //  -0.5px -0.5px 0 #dcdcdc,
+    //    0.5px -0.5px 0 #dcdcdc,
+    //   -0.5px  0.5px 0 #dcdcdc,
+    //    0.5px  0.5px 0 #dcdcdc
+    // `,
                 }}
               >
                 Welcome to Admin Panel
               </Typography>
             </Box>
 
-            <form onSubmit={handleSubmit} style={{ width: '450px' }}>
+            <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 450 }}>
               <Box sx={{ mb: 3 }}>
                 <TextField
                   fullWidth
@@ -330,7 +339,7 @@ export default function AdminLogin() {
                       borderRadius: '15px',
                       backgroundColor: '#F8F9FA',
                       border: '3px solid #667eea',
-                      height: '70px',
+                      height: { xs: '58px', md: '70px' },
                       '&:hover': {
                         border: '3px solid #764ba2',
                         backgroundColor: '#FFFFFF',
@@ -342,7 +351,7 @@ export default function AdminLogin() {
                     },
                     '& .MuiOutlinedInput-input': {
                       padding: '20px 16px',
-                      fontSize: '1.1rem',
+                      fontSize: { xs: '1rem', md: '1.1rem' },
                     },
                     '& fieldset': {
                       border: 'none',
@@ -370,7 +379,7 @@ export default function AdminLogin() {
                       borderRadius: '15px',
                       backgroundColor: '#F8F9FA',
                       border: '3px solid #667eea',
-                      height: '70px',
+                      height: { xs: '58px', md: '70px' },
                       '&:hover': {
                         border: '3px solid #764ba2',
                         backgroundColor: '#FFFFFF',
@@ -382,7 +391,7 @@ export default function AdminLogin() {
                     },
                     '& .MuiOutlinedInput-input': {
                       padding: '20px 16px',
-                      fontSize: '1.1rem',
+                     fontSize: { xs: '1rem', md: '1.1rem' },
                     },
                     '& fieldset': {
                       border: 'none',
