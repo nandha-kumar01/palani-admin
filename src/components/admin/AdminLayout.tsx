@@ -205,6 +205,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
+const handleDrawerToggle = () => {
+  setMobileOpen((prev) => !prev);
+};
 
 
   useEffect(() => {
@@ -711,6 +714,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                           <ListItemButton
                             component={Link}
                             href={subItem.path}
+                             onClick={() => {
+    if (isMobile) setMobileOpen(false); // ✅ ADD THIS
+  }}
                             selected={pathname === subItem.path}
                             sx={{
                               pl: 6, // More left padding for sub-items
@@ -826,6 +832,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 color="inherit"
                 aria-label="open drawer"
                 edge="start"
+                  onClick={handleDrawerToggle}   // ✅ ADD THIS LINE
                 sx={{ 
                   display: { md: 'none' },
                   color: '#667eea',
@@ -1265,6 +1272,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Drawer
             variant="temporary"
             open={mobileOpen}
+              onClose={handleDrawerToggle}   // ✅ ADD THIS
             ModalProps={{
               keepMounted: true,
             }}
@@ -1303,8 +1311,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           component="main"
           sx={{
             flexGrow: 1,
-            p: 0,
-            width: { md: `calc(100% - ${drawerWidth}px)` },
+            p: 3,
+            width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
             mt: '80px', // Match new header height
             minHeight: 'calc(100vh - 80px)',
             mr: locationSidebarOpen ? { md: '280px' } : 0,
