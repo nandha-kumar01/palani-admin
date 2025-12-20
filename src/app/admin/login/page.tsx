@@ -564,7 +564,10 @@ fontWeight: 'bold',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 500,
+                 // ✅ RESPONSIVE FIX
+        width: { xs: '90%', sm: 420, md: 500 },
+        maxHeight: '90vh',
+        overflowY: 'auto',
                 bgcolor: 'background.paper',
                 borderRadius: '20px',
                 border: '3px solid #667eea',
@@ -585,12 +588,12 @@ fontWeight: 'bold',
                   textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
                 }}
               >
-                <Typography variant="h5" sx={{ fontWeight: 'bold', letterSpacing: '1px' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', letterSpacing: '1px',  fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                   {forgotStep === 1 && 'Reset Password'}
                   {forgotStep === 2 && 'Verify OTP'}
                   {forgotStep === 3 && 'New Password'}
                 </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5, fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
                   {forgotStep === 1 && 'Enter your email to receive OTP'}
                   {forgotStep === 2 && 'Enter the 6-digit OTP sent to your email'}
                   {forgotStep === 3 && 'Create your new password'}
@@ -614,7 +617,9 @@ fontWeight: 'bold',
                         borderRadius: '12px',
                         backgroundColor: '#F8F9FA',
                         border: '2px solid #667eea',
-                        height: '60px',
+                        height: { xs: '52px', sm: '60px' },
+fontSize: { xs: '0.95rem', sm: '1rem' },
+
                         '&:hover': {
                           border: '2px solid #764ba2',
                           backgroundColor: '#FFFFFF',
@@ -654,14 +659,23 @@ fontWeight: 'bold',
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
                     variant="outlined"
-                    inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '8px' } }}
+inputProps={{
+  maxLength: 6,
+  style: {
+    textAlign: 'center',
+    fontSize: '1.3rem',
+    letterSpacing: '4px',
+  }
+}}
                     sx={{
                       mb: 3,
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '12px',
                         backgroundColor: '#F8F9FA',
                         border: '2px solid #667eea',
-                        height: '60px',
+                       height: { xs: '52px', sm: '60px' },
+fontSize: { xs: '0.95rem', sm: '1rem' },
+
                         '&:hover': {
                           border: '2px solid #764ba2',
                           backgroundColor: '#FFFFFF',
@@ -703,7 +717,9 @@ fontWeight: 'bold',
                         borderRadius: '12px',
                         backgroundColor: '#F8F9FA',
                         border: '2px solid #667eea',
-                        height: '60px',
+                        height: { xs: '52px', sm: '60px' },
+fontSize: { xs: '0.95rem', sm: '1rem' },
+
                         '&:hover': {
                           border: '2px solid #764ba2',
                           backgroundColor: '#FFFFFF',
@@ -755,7 +771,9 @@ fontWeight: 'bold',
                         borderRadius: '12px',
                         backgroundColor: '#F8F9FA',
                         border: '2px solid #667eea',
-                        height: '60px',
+                        height: { xs: '52px', sm: '60px' },
+fontSize: { xs: '0.95rem', sm: '1rem' },
+
                         '&:hover': {
                           border: '2px solid #764ba2',
                           backgroundColor: '#FFFFFF',
@@ -768,6 +786,7 @@ fontWeight: 'bold',
                       '& .MuiOutlinedInput-input': {
                         padding: '16px',
                         fontSize: '1rem',
+                        
                       },
                       '& fieldset': {
                         border: 'none',
@@ -808,7 +827,7 @@ fontWeight: 'bold',
               )}
 
               {/* Action Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', gap: 2,     flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between' }}>
                 <Button
                   onClick={handleForgotPasswordClose}
                   variant="outlined"
