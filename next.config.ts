@@ -1,24 +1,33 @@
-
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ✅ File upload configurations for large files (songs)
+  // ✅ Enable Turbopack (IMPORTANT FIX)
+  turbopack: {},
+
+  // ✅ Experimental features
   experimental: {
     webpackBuildWorker: true,
     optimizeCss: true,
-    optimizePackageImports: ['@mui/material', '@mui/icons-material', '@mantine/core'],
+    optimizePackageImports: [
+      '@mui/material',
+      '@mui/icons-material',
+      '@mantine/core',
+    ],
   },
 
-  // ✅ Server external packages (moved from experimental)
+  // ✅ Server external packages
   serverExternalPackages: ['sharp'],
 
-  // ✅ Performance optimizations
+  // ✅ Performance
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
 
-  // ✅ Bundle analyzer for build optimization
-  webpack: (config, { dev, isServer }) => {
+  // ✅ Webpack config (ONLY when NOT using Turbopack)
+  webpack: (config, { dev, isServer, nextRuntime }) => {
+    // 🚫 Turbopack running → skip webpack
+    if (nextRuntime === 'edge') return config;
+
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -34,19 +43,19 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // ✅ Conditional static export - only for mobile build
-  ...(process.env.MOBILE_BUILD === 'true' ? {
-    output: 'export',
-    // 🔥 trailingSlash removed to fix 308 redirect
-    // trailingSlash: true, // <-- don't use this!
-  } : {}),
+  // ✅ Conditional static export
+  ...(process.env.MOBILE_BUILD === 'true'
+    ? {
+        output: 'export',
+      }
+    : {}),
 
-  // ✅ Disable TypeScript during build for mobile compatibility
+  // ✅ TypeScript
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // ✅ Image optimization
+  // ✅ Images
   images: {
     unoptimized: process.env.MOBILE_BUILD === 'true',
     formats: ['image/webp', 'image/avif'],
@@ -54,29 +63,27 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // ✅ Base path and asset prefix for Capacitor builds
-  basePath: process.env.NODE_ENV === 'production' && process.env.MOBILE_BUILD === 'true' ? '' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' && process.env.MOBILE_BUILD === 'true' ? '' : '',
+  basePath:
+    process.env.NODE_ENV === 'production' &&
+    process.env.MOBILE_BUILD === 'true'
+      ? ''
+      : '',
 
-  // ✅ Security and performance headers
+  assetPrefix:
+    process.env.NODE_ENV === 'production' &&
+    process.env.MOBILE_BUILD === 'true'
+      ? ''
+      : '',
+
+  // ✅ Security headers
   async headers() {
     return [
-      // Security headers for all pages
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
@@ -87,7 +94,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Headers for /api/admin/users
       {
         source: '/api/admin/users/:path*',
         headers: [
@@ -95,21 +101,11 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, max-age=0',
           },
-          {
-            key: 'Connection',
-            value: 'keep-alive',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+          { key: 'Connection', value: 'keep-alive' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
         ],
       },
-      // General headers for all other APIs
       {
         source: '/api/:path*',
         headers: [
@@ -117,14 +113,8 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, max-age=0',
           },
-          {
-            key: 'Connection',
-            value: 'keep-alive',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
+          { key: 'Connection', value: 'keep-alive' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
         ],
       },
     ];
