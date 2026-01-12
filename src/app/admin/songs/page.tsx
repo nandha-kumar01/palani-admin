@@ -14,6 +14,7 @@ import {
   TableRow,
   IconButton,
   Alert,
+  Paper,
   CircularProgress,
   Card,
   CardContent,
@@ -31,7 +32,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+Pagination,
+ PaginationItem,
 } from '@mui/material';
+import { Filter } from 'iconoir-react';
 import {
   CloudUpload,
   PlayArrow,
@@ -45,7 +49,6 @@ import {
   AccessTime,
   Refresh,
   Add,
-  Filter,
   FilterAlt,
   FilterList,
   Search,
@@ -476,9 +479,27 @@ export default function SongsPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  
+   const [page, setPage] = useState(1);
+const rowsPerPage = 10;    
+const totalPages = Math.ceil(sortedAndFilteredSongs.length / rowsPerPage);
+  
+ const paginatedSongs = sortedAndFilteredSongs.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+    
+   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+   useEffect(() => {
+  setPage(1);
+}, [searchTerm, filterArtist, filterDuration, filterDateRange, sortBy]);
+
+
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box >
         {/* Loading Animation Overlay */}
         {showLoadingAnimation && (
           <Box
@@ -569,28 +590,28 @@ export default function SongsPage() {
             <StatCard
               title="Total Songs"
               value={stats.total}
-              icon={<MusicNote sx={{ fontSize: 30 }} />}
+              icon={<MusicNote sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Total Artists"
               value={stats.totalArtists}
-              icon={<Person sx={{ fontSize: 30 }} />}
+              icon={<Person sx={{ fontSize: 38 }} />}
               color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="Total Duration"
               value={`${stats.totalDuration}m`}
-              icon={<AccessTime sx={{ fontSize: 30 }} />}
+              icon={<AccessTime sx={{ fontSize: 38 }} />}
               color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="Recent Uploads"
               value={stats.recentUploads}
-              icon={<TrendingUp sx={{ fontSize: 30 }} />}
+              icon={<TrendingUp sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
@@ -618,10 +639,10 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                                   transition: 'all 0.2s ease',
                                 }}
                               >
-                                <FilterAlt width={20} height={20} />
+                                <Filter width={20} height={20} />
                               </IconButton>
-                              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
-                                Songs Management
+                            <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                                Songs
                               </Typography>
                             </Box>
                 
@@ -677,21 +698,30 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
           <Collapse in={showSearchFilter}>
             <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0', bgcolor: '#f9f9f9' }}>
               
+               <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
+                                Filter Songs
+                              </Typography>
+
               {/* Search Field */}
               <TextField
                 fullWidth
-                label="Search songs or artists..."
+                label="Search songs or artists"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                sx={{ 
-                  mb: 2,
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                  }
-                }}
-                InputProps={{
+                sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        backgroundColor: 'white',
+                        mb: 2,
+                        '&:hover fieldset': {
+                          borderColor: '#667eea',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#667eea',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}                InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <Search sx={{ color: '#667eea' }} />
@@ -707,7 +737,26 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                 gap: 2,
                 mb: 2 
               }}>
-                               <FormControl fullWidth>
+     <FormControl  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                   <InputLabel>Artist</InputLabel>
                   <Select
                     value={filterArtist}
@@ -727,7 +776,26 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                   </Select>
                 </FormControl>
                 
-                                <FormControl fullWidth>
+                  <FormControl  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                   <InputLabel>Duration</InputLabel>
                   <Select
                     value={filterDuration}
@@ -745,11 +813,31 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                   </Select>
                 </FormControl>
                 
-                <FormControl fullWidth>
-                  <InputLabel> Date</InputLabel>
+                <FormControl  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} 
+  fullWidth>
+                  <InputLabel>Date</InputLabel>
                   <Select
                     value={filterDateRange}
-                    label="Filter by Date"
+                    label="Date"
                     onChange={(e) => setFilterDateRange(e.target.value)}
                     sx={{
                         borderRadius: 2,
@@ -763,7 +851,26 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                   </Select>
                 </FormControl>
                 
-                <FormControl fullWidth>
+                <FormControl   sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                   <InputLabel>Sort by</InputLabel>
                   <Select
                     value={sortBy}
@@ -784,23 +891,8 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
               
               {/* Clear Filters Button */}
                 <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
-              <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<FilterList />}
-                                sx={{ 
-                                  borderRadius: 2, 
-                                  px: 3, 
-                                  py: 1,
-                                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                  '&:hover': {
-                                    background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                                  },
-                                }}
-                              >
-                                Filter
-                              </Button>
-                
+            
+            
                   <Button
                     variant="outlined"
                     onClick={() => {
@@ -811,46 +903,40 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                       setSortBy('recent');
                     }}
                     startIcon={<RestartAlt />}
-                    sx={{ 
-                      borderRadius: 2, 
-                      px: 3, 
-                      py: 1,
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      '&:hover': {
-                        borderColor: '#5a6fd8',
-                        backgroundColor: '#667eea15',
-                      },
-                    }}
+                    sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
                   >
                     Reset
                   </Button>
+
+              <Button
+                                variant="contained"
+                                startIcon={<FilterList />}
+                                sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }} 
+                              >
+                                Filter
+                              </Button>
+                
               </Box>
             </Box>
           </Collapse>
           
-          <CardContent sx={{ p: 1, '&:last-child': { pb: 1 }, height: "500px", overflow: 'hidden' }}>
-            <TableContainer sx={{ 
-              maxHeight: '460px', 
-              overflow: 'auto',
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: '#f1f1f1',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: '#c1c1c1',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                backgroundColor: '#a8a8a8',
-              },
-            }}>
-              <Table stickyHeader>
+            <TableContainer component={Paper} elevation={0}>
+              <Table  sx={{ '& .MuiTableCell-root': { borderBottom: '1px solid #f0f0f0' } }}>
                 <TableHead>
-                  <TableRow>
+                  <TableRow sx={{ backgroundColor: '#f8fafc' }}>
                     <TableCell sx={{ backgroundColor: 'background.paper', fontWeight: 'bold', width: '60px' }}>S.No</TableCell>
                     <TableCell sx={{ backgroundColor: 'background.paper', fontWeight: 'bold', width: '80px' }}>Thumbnail</TableCell>
                     <TableCell sx={{ backgroundColor: 'background.paper', fontWeight: 'bold' }}>Title</TableCell>
@@ -883,7 +969,7 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                       </TableCell>
                     </TableRow>
                   ) : (
-                    sortedAndFilteredSongs.map((song, index) => (
+                    paginatedSongs.map((song, index) => (
                       <TableRow 
                         key={song._id}
                         sx={{ 
@@ -892,7 +978,7 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                       >
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium" color="text.secondary">
-                            {index + 1}
+                             {(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -979,7 +1065,43 @@ onClick={() => setShowSearchFilter(!showSearchFilter)}                          
                 </TableBody>
               </Table>
             </TableContainer>
-          </CardContent>
+                                                  {/* Pagination */}
+                       {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  size="large"
+                  renderItem={(item) => (
+                    <PaginationItem
+                      {...item}
+                       sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+                    />
+                  )}
+                />
+              </Box>
+            )}
         </Card>
 
         {/* Audio Player Controls */}

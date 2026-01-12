@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { Filter } from 'iconoir-react';
 import {
   Box,
   Card,
@@ -19,6 +20,8 @@ import {
   Alert,
   CircularProgress,
   Avatar,
+  PaginationItem,
+  
   TextField,
   InputAdornment,
   Tooltip,
@@ -40,6 +43,7 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  Pagination,
 } from '@mui/material';
 import {
   Search,
@@ -1010,12 +1014,10 @@ export default function UsersPage() {
     if (loading || isRetrying) return; // Prevent multiple calls
     
     fetchUsersSafe();
-    showNotification('Filters applied successfully!', 'success');
-  }, [loading, isRetrying]);
+  }, []);
 
   const handleResetFilters = useCallback(() => {
     clearAllFilters();
-    showNotification('All filters have been reset!', 'info');
   }, []);
 
   const fetchGroups = async () => {
@@ -1650,6 +1652,27 @@ export default function UsersPage() {
     
     return formattedDate;
   };
+  const [searchFilter, setSearchFilter] = useState('');
+
+const filteredUsers = users.filter(user =>
+  searchFilter === '' ||
+  user.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+  user.email.toLowerCase().includes(searchFilter.toLowerCase())
+);
+
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+
+const paginatedUsers = filteredUsers.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: any, value: number) => {
+  setPage(value);
+};
 
   return (
     <AdminLayout>
@@ -1744,25 +1767,25 @@ export default function UsersPage() {
           <StatCard
             title="Total Users"
             value={stats.total.toLocaleString()}
-            icon={<Person />}
+            icon={<Person sx={{ fontSize: 38 }}/>}
             color="#667eea"
           />
           <StatCard
             title="Active Users"
             value={stats.active}
-            icon={<CheckCircle />}
+            icon={<CheckCircle sx={{ fontSize: 38 }}/>}
             color="#764ba2"
           />
           <StatCard
             title="Currently Tracking"
             value={stats.tracking}
-            icon={<LocationOn />}
+            icon={<LocationOn sx={{ fontSize: 38 }} />}
             color="#8B5CF6"
           />
           <StatCard
             title="On Pathayathirai"
             value={stats.onPathayathirai}
-            icon={<DirectionsWalk />}
+            icon={<DirectionsWalk sx={{ fontSize: 38 }}/>}
             color="#667eea"
           />
         </Box>
@@ -1888,7 +1911,7 @@ export default function UsersPage() {
                 <IconButton
                   onClick={() => setShowSearchFilter(!showSearchFilter)}
                   sx={{
-                    backgroundColor: showSearchFilter ? '#e6efff' : '#f5f5f5',
+                    backgroundColor: showSearchFilter ? '#667eea20' : '#f5f5f5',
                     color: showSearchFilter ? '#667eea' : '#666',
                     borderRadius: 1.5,
                     width: 40,
@@ -1901,10 +1924,10 @@ export default function UsersPage() {
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <FilterList sx={{ fontSize: 20 }} />
+                  <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
-                  Users
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                    Users
                 </Typography>
                 
                 {/* Connection Status Indicator */}
@@ -2009,7 +2032,7 @@ export default function UsersPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter Users
                 </Typography>
                 
@@ -2557,7 +2580,7 @@ export default function UsersPage() {
                     </TableRow>
                   ) : (
                     // Actual Data Rows
-                    users.map((user,index) => (
+                    paginatedUsers.map((user, index) => (
                     <TableRow 
                       key={user._id} 
                       hover 
@@ -2578,7 +2601,7 @@ export default function UsersPage() {
                             fontSize: '0.875rem'
                           }}
                         >
-                          {index + 1}
+                        {(page - 1) * rowsPerPage + index + 1}
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ minWidth: 250, px: 3 }}>
@@ -2904,18 +2927,8 @@ export default function UsersPage() {
                               }
                             },
                             '& .delete-button': {
-                              marginRight: '8px', // Extra spacing after delete button
                               position: 'relative',
-                              '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                right: '-6px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                width: '1px',
-                                height: '24px',
-                                backgroundColor: '#e0e0e0',
-                              }
+                              
                             }
                           }}
                         >
@@ -3006,7 +3019,7 @@ export default function UsersPage() {
                                 color: user.isActive ? '#ff9800' : '#10b981',
                                 borderColor: user.isActive ? '#ff9800' : '#10b981',
                                 backgroundColor: user.isActive ? '#fff3e0' : '#f0fdf4',
-                                marginLeft: '4px', // Extra spacing from delete button
+                                marginLeft: '-1px', 
                                 '&:hover': { 
                                   backgroundColor: user.isActive ? '#ffe0b2' : '#dcfce7',
                                   borderColor: user.isActive ? '#f57c00' : '#059669',
@@ -3053,6 +3066,51 @@ export default function UsersPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+            {totalPages > 1 && (
+
+<Box
+  sx={{
+    display: 'flex',
+    justifyContent: 'center',
+    p: 2,
+  }}
+>
+  <Pagination
+    count={totalPages}
+    page={page}
+    onChange={handlePageChange}
+    size="large"
+    renderItem={(item) => (
+      <PaginationItem
+        {...item}
+         sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+      />
+    )}
+  />
+</Box>
+
+)}
+
           </CardContent>
         </Card>
 

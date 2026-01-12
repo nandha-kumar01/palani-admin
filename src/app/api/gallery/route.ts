@@ -21,7 +21,7 @@ async function getGalleryImages(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const limit = parseInt(searchParams.get('limit') || '');
     const skip = (page - 1) * limit;
 
     let query: any = { isActive: true };

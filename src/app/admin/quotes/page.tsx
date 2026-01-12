@@ -38,6 +38,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+    Pagination,
+    PaginationItem,
 } from '@mui/material';
 import {
   Search,
@@ -192,13 +194,22 @@ export default function QuotesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorFilter, setAuthorFilter] = useState('');
   const [languageFilter, setLanguageFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  // Applied filters: used to actually request filtered data only when "Filter" is clicked
+  const [appliedFilters, setAppliedFilters] = useState<{ search: string; category: string; author: string; language: string; status: string }>({
+    search: '',
+    category: '',
+    author: '',
+    language: '',
+    status: '',
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [bulkSelection, setBulkSelection] = useState<string[]>([]);
@@ -235,14 +246,15 @@ export default function QuotesPage() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: pageSize.toString(),
-        ...(searchTerm && { search: searchTerm }),
-        ...(categoryFilter && { category: categoryFilter }),
-        ...(languageFilter && { language: languageFilter }),
-        ...(statusFilter && { status: statusFilter }),
+        ...(appliedFilters.search && { search: appliedFilters.search }),
+        ...(appliedFilters.category && { category: appliedFilters.category }),
+        ...(appliedFilters.author && { author: appliedFilters.author }),
+        ...(appliedFilters.language && { language: appliedFilters.language }),
+        ...(appliedFilters.status && { status: appliedFilters.status }),
       });
 
-      // Add Murugan-specific search if no specific search term
-      if (!searchTerm) {
+      // Add Murugan-specific search if no specific applied search term
+      if (!appliedFilters.search) {
         params.append('search', 'murugan');
       }
 
@@ -278,7 +290,7 @@ export default function QuotesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, searchTerm, categoryFilter, languageFilter, statusFilter]);
+  }, [page, pageSize, appliedFilters]);
 
   useEffect(() => {
     fetchQuotes();
@@ -286,7 +298,6 @@ export default function QuotesPage() {
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-    setPage(1); // Reset to first page when searching
   };
 
   const handleDelete = async (quoteId: string, permanent: boolean = false) => {
@@ -493,50 +504,50 @@ export default function QuotesPage() {
     return colors[language] || '#757575';
   };
 
+const totalPages = Math.ceil(totalItems / pageSize);
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+useEffect(() => {
+  setPage(1);
+}, [appliedFilters]);
 
 
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
-
+      <Box>
 
         {/* Stats Cards */}
         {stats && (
           <Box sx={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
             gap: 3, 
-            mb: 4 
+            mb: 3 
           }}>
             <StatCard
               title="Total Quotes"
               value={stats.total}
-              icon={<FormatQuote />}
+              icon={<FormatQuote sx={{ fontSize: 38 }} />}
               color="#667eea"
             />
             <StatCard
               title="Active"
               value={stats.active}
-              icon={<CheckCircle />}
-              color="#22c55e"
+              icon={<CheckCircle sx={{ fontSize: 38 }}/>}
+              color="#764ba2"
             />
             <StatCard
               title="Featured"
               value={stats.featured}
-              icon={<Star />}
-              color="#f59e0b"
+              icon={<Star sx={{ fontSize: 38 }} />}
+               color="#8B5CF6"
             />
             <StatCard
               title="Inactive"
               value={stats.inactive}
-              icon={<Block />}
-              color="#ef4444"
-            />
-            <StatCard
-              title="Deleted"
-              value={stats.deleted}
-              icon={<Delete />}
-              color="#6b7280"
+              icon={<Block sx={{ fontSize: 38 }}/>}
+              color="#667eea"
             />
           </Box>
         )}
@@ -567,7 +578,7 @@ export default function QuotesPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
+               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                   Quotes
                 </Typography>
               </Box>
@@ -625,7 +636,7 @@ export default function QuotesPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter Quotes
                 </Typography>
                 
@@ -663,8 +674,8 @@ export default function QuotesPage() {
                     fullWidth
                     label="Author"
                     placeholder="Enter author name..."
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    value={authorFilter}
+                    onChange={(e) => setAuthorFilter(e.target.value)}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -714,56 +725,50 @@ export default function QuotesPage() {
                 </Box>
 
                 {/* Action Buttons */}
-                <Box display="flex" justifyContent="flex-end" alignItems="center">
-                  <Box display="flex" gap={2}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        fetchQuotes();
-                        showNotification('success', 'Success', 'Filters applied successfully!');
-                      }}
-                      startIcon={<FilterList />}
-                      sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                        },
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                      }}
-                    >
-                      Filter
-                    </Button>
-                    
-                    <Button
+                <Box display="flex" justifyContent="flex-end" alignItems="center"gap={2}>
+                   <Button
                       variant="outlined"
-                      size="small"
                       onClick={() => {
                         setSearchTerm('');
                         setCategoryFilter('');
+                        setAuthorFilter('');
                         setLanguageFilter('');
                         setStatusFilter('');
-                        setPage(1);
-                        showNotification('info', 'Info', 'Filters reset successfully!');
+                        // clear applied filters so UI and data reset, keep panel open
+                        setAppliedFilters({ search: '', category: '', author: '', language: '', status: '' });
                       }}
                       startIcon={<Refresh />}
-                      sx={{
+                       sx={{
                         borderColor: '#667eea',
                         color: '#667eea',
                         '&:hover': {
                           borderColor: '#5a6fd8',
-                          backgroundColor: '#667eea15',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
                         },
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
                       }}
                     >
                       Reset
                     </Button>
-                  </Box>
+                   
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        // apply current UI fields into appliedFilters — fetch will run via effect
+                        setAppliedFilters({ search: searchTerm, category: categoryFilter, author: authorFilter, language: languageFilter, status: statusFilter });
+                      }}
+                      startIcon={<FilterList />}
+                     sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }} 
+                    >
+                      Filter
+                    </Button>
+                    
+                    
                 </Box>
               </Box>
             )}
@@ -1134,6 +1139,44 @@ export default function QuotesPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+                                           {/* Pagination */}
+                     {totalPages > 1 && (
+  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+    <Pagination
+      count={totalPages}
+      page={page}
+      onChange={handlePageChange}
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
+  </Box>
+)}
+
           </CardContent>
         </Card>
 

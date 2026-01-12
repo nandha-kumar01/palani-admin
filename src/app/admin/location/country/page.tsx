@@ -21,9 +21,10 @@ import {
   InputAdornment,
   Avatar,
   Stack,
-  Pagination,
   Skeleton,
   Tooltip,
+  Pagination,
+  PaginationItem,
 } from '@mui/material';
 import {
   Search,
@@ -106,6 +107,13 @@ export default function CountryPage() {
   const [nameFilter, setNameFilter] = useState('');
   const [codeFilter, setCodeFilter] = useState('');
   const [dialingCodeFilter, setDialingCodeFilter] = useState('');
+  // Applied filters - only used when user clicks Filter
+  const [appliedFilters, setAppliedFilters] = useState<{ name: string; code: string; dialingCode: string; search: string }>({
+    name: '',
+    code: '',
+    dialingCode: '',
+    search: '',
+  });
   
   // Search filter toggle state
   const [showSearchFilter, setShowSearchFilter] = useState(false);
@@ -154,12 +162,12 @@ export default function CountryPage() {
       setLoading(true);
       setStatsLoading(true);
       
-      // Build query parameters for individual filters
+      // Build query parameters for individual filters (use applied filters)
       const params = new URLSearchParams();
-      if (nameFilter) params.append('name', nameFilter);
-      if (codeFilter) params.append('code', codeFilter);
-      if (dialingCodeFilter) params.append('dialingCode', dialingCodeFilter);
-      if (searchTerm) params.append('search', searchTerm);
+      if (appliedFilters.name) params.append('name', appliedFilters.name);
+      if (appliedFilters.code) params.append('code', appliedFilters.code);
+      if (appliedFilters.dialingCode) params.append('dialingCode', appliedFilters.dialingCode);
+      if (appliedFilters.search) params.append('search', appliedFilters.search);
       
       // Pagination parameters
       params.append('limit', '10');
@@ -208,7 +216,7 @@ export default function CountryPage() {
 
   useEffect(() => {
     fetchCountries(page);
-  }, [nameFilter, codeFilter, dialingCodeFilter, searchTerm, page]);
+  }, [appliedFilters, page]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -231,8 +239,9 @@ export default function CountryPage() {
   };
 
   const handleApplyFilters = () => {
+    // Apply current UI filter values
+    setAppliedFilters({ name: nameFilter, code: codeFilter, dialingCode: dialingCodeFilter, search: searchTerm });
     setPage(1);
-    fetchCountries(1);
   };
 
   const handleResetFilters = () => {
@@ -241,7 +250,8 @@ export default function CountryPage() {
     setDialingCodeFilter('');
     setSearchTerm('');
     setPage(1);
-    setShowSearchFilter(false);
+    // keep the filter panel open; clear applied filters so data resets
+    setAppliedFilters({ name: '', code: '', dialingCode: '', search: '' });
   };
 
   return (
@@ -327,7 +337,7 @@ export default function CountryPage() {
         )}
         
         {/* Statistics Cards */}
-        <Box sx={{ mb: 4 }}>
+        <Box >
         
           <Box sx={{ 
             display: 'grid', 
@@ -338,28 +348,28 @@ export default function CountryPage() {
             <StatCard
               title="Total Countries"
               value={stats.total}
-              icon={<Public sx={{ fontSize: 30 }} />}
+              icon={<Public sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Active Countries"
               value={stats.active}
-              icon={<CheckCircle sx={{ fontSize: 30 }} />}
+              icon={<CheckCircle sx={{ fontSize: 38 }} />}
               color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="Inactive Countries"
               value={stats.inactive}
-              icon={<Language sx={{ fontSize: 30 }} />}
+              icon={<Language sx={{ fontSize: 38 }} />}
               color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="Recently Added"
               value={stats.recentlyAdded}
-              icon={<AccessTime sx={{ fontSize: 30 }} />}
+              icon={<AccessTime sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
@@ -390,8 +400,8 @@ export default function CountryPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
-                  Countries
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                  Country
                 </Typography>
               </Box>
               
@@ -422,8 +432,8 @@ export default function CountryPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
-                  Filter Countries
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
+                  Filter Country
                 </Typography>
                 
                 <Box display="flex" gap={2} mb={2}>
@@ -514,49 +524,39 @@ export default function CountryPage() {
 
                 {/* Action Buttons */}
                 <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
-                  <Button
+                 <Button
                     variant="outlined"
                     startIcon={<RestartAlt />}
                     onClick={handleResetFilters}
                     sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        borderColor: '#764ba2',
-                        backgroundColor: '#667eea10',
-                        color: '#764ba2',
-                      },
-                    }}
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
                   >
                     Reset
                   </Button>
-                  
+
                   <Button
                     variant="contained"
                     startIcon={<FilterList />}
                     onClick={handleApplyFilters}
                     sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                        boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                      },
-                    }}
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }} 
                   >
                     Filter
                   </Button>
+                 
+                  
+                  
                 </Box>
               </Box>
             )}
@@ -775,33 +775,52 @@ export default function CountryPage() {
             </TableContainer>
 
             {/* Pagination */}
-            {!loading && totalPages > 1 && (
-              <Box display="flex" justifyContent="end" mt={3}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      '&:hover': {
-                        backgroundColor: '#667eea20',
-                      },
-                      '&.Mui-selected': {
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #5a67d8 0%, #68306d 100%)',
-                        },
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            )}
+          {/* Pagination */}
+{!loading && totalPages > 1 && (
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      mt: 3,
+    }}
+  >
+    <Pagination
+      count={totalPages}
+      page={page}
+      onChange={handlePageChange}
+      shape="rounded"
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
+  </Box>
+)}
+
           </CardContent>
         </Card>
 

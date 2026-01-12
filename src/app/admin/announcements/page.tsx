@@ -35,6 +35,8 @@ import {
   Snackbar,
   Avatar,
   Skeleton,
+   Pagination,
+  PaginationItem,
   Divider
 } from '@mui/material';
 import {
@@ -152,6 +154,13 @@ export default function AnnouncementsPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [audienceFilter, setAudienceFilter] = useState('');
+  // Applied filters are used to actually filter the list only when user clicks "Filter"
+  const [appliedFilters, setAppliedFilters] = useState<{ title: string; type: string; status: string; audience: string }>({
+    title: '',
+    type: '',
+    status: '',
+    audience: '',
+  });
   
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
@@ -177,8 +186,13 @@ export default function AnnouncementsPage() {
 
   // Filter functions
   const handleApplyFilters = () => {
-    fetchAnnouncements();
-    showNotification('Filters applied successfully!', 'success');
+    setAppliedFilters({
+      title: titleFilter,
+      type: typeFilter,
+      status: statusFilter,
+      audience: audienceFilter,
+    });
+    setPage(1);
   };
 
   const handleResetFilters = () => {
@@ -186,8 +200,7 @@ export default function AnnouncementsPage() {
     setTypeFilter('');
     setStatusFilter('');
     setAudienceFilter('');
-    setShowSearchFilter(false);
-    showNotification('Filters reset successfully!', 'info');
+    setAppliedFilters({ title: '', type: '', status: '', audience: '' });
   };
   
   const [formData, setFormData] = useState<{
@@ -442,12 +455,12 @@ export default function AnnouncementsPage() {
     }
   };
 
-    const filteredAnnouncements = announcements.filter(announcement => {
+  const filteredAnnouncements = announcements.filter((announcement) => {
     return (
-      (titleFilter === '' || announcement.title.toLowerCase().includes(titleFilter.toLowerCase())) &&
-      (typeFilter === '' || announcement.type === typeFilter) &&
-      (statusFilter === '' || announcement.isActive.toString() === statusFilter) &&
-      (audienceFilter === '' || announcement.audience === audienceFilter)
+      (appliedFilters.title === '' || announcement.title.toLowerCase().includes(appliedFilters.title.toLowerCase())) &&
+      (appliedFilters.type === '' || announcement.type === appliedFilters.type) &&
+      (appliedFilters.status === '' || announcement.isActive.toString() === appliedFilters.status) &&
+      (appliedFilters.audience === '' || announcement.audience === appliedFilters.audience)
     );
   });
 
@@ -489,9 +502,28 @@ export default function AnnouncementsPage() {
     return 'success';
   };
 
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(filteredAnnouncements.length / rowsPerPage);
+
+const paginatedAnnouncements = filteredAnnouncements.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+useEffect(() => {
+  setPage(1);
+}, [appliedFilters]);
+
+
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box >
         {/* Loading Animation Overlay */}
         {showLoadingAnimation && (
           <Box
@@ -583,28 +615,28 @@ export default function AnnouncementsPage() {
             <StatCard
               title="Total Announcements"
               value={totalAnnouncements.toString()}
-              icon={<CampaignIcon sx={{ fontSize: 30 }} />}
+              icon={<CampaignIcon sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Active"
               value={activeAnnouncements.toString()}
-              icon={<CheckCircleIcon sx={{ fontSize: 30 }} />}
+              icon={<CheckCircleIcon sx={{ fontSize: 38 }} />}
               color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="Inactive"
               value={inactiveAnnouncements.toString()}
-              icon={<PauseCircle sx={{ fontSize: 30 }} />}
+              icon={<PauseCircle sx={{ fontSize: 38 }} />}
               color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="Important"
               value={importantAnnouncements.toString()}
-              icon={<PriorityHighIcon sx={{ fontSize: 30 }} />}
+              icon={<PriorityHighIcon sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
@@ -635,7 +667,7 @@ export default function AnnouncementsPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
+               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                 Announcements
                 </Typography>
               </Box>
@@ -687,7 +719,7 @@ export default function AnnouncementsPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter Announcements
                 </Typography>
                 
@@ -695,7 +727,7 @@ export default function AnnouncementsPage() {
                     <TextField
                       fullWidth
                       label="Title"
-                      placeholder="Enter announcement title..."
+                      placeholder="Enter announcement title"
                       value={titleFilter}
                       onChange={(e) => setTitleFilter(e.target.value)}
                       InputProps={{
@@ -833,15 +865,10 @@ export default function AnnouncementsPage() {
                       sx={{
                         borderColor: '#667eea',
                         color: '#667eea',
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600,
                         '&:hover': {
-                          borderColor: '#764ba2',
+                          borderColor: '#5a6fd8',
                           backgroundColor: '#667eea10',
-                          color: '#764ba2',
+                          color: '#5a6fd8',
                         },
                       }}
                     >
@@ -854,18 +881,10 @@ export default function AnnouncementsPage() {
                       onClick={handleApplyFilters}
                       sx={{
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
                         '&:hover': {
-                          background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                          boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
                         },
-                      }}
+                      }}     
                     >
                       Filter
                     </Button>
@@ -951,7 +970,7 @@ export default function AnnouncementsPage() {
                     </TableRow>
                   ))
                 ) : (
-                  filteredAnnouncements.map((announcement, index) => (
+paginatedAnnouncements.map((announcement, index) => (
                     <TableRow 
                       key={announcement._id} 
                       hover 
@@ -971,7 +990,7 @@ export default function AnnouncementsPage() {
                             fontSize: '0.875rem'
                           }}
                         >
-                          {index + 1}
+{(page - 1) * rowsPerPage + index + 1}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -1147,7 +1166,15 @@ export default function AnnouncementsPage() {
                               fontWeight: 500
                             }}
                           >
-                            {announcement.createdBy?.name || 'Unknown'}
+                           {announcement.createdBy?.name && (
+  <Typography
+    variant="caption"
+    sx={{ color: '#6b7280', fontSize: '0.65rem', fontWeight: 500 }}
+  >
+    {announcement.createdBy.name}
+  </Typography>
+)}
+
                           </Typography>
                         </Box>
                       </TableCell>
@@ -1279,6 +1306,43 @@ export default function AnnouncementsPage() {
               </Typography>
             </Box>
           )}
+
+                      {totalPages > 1 && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                          <Pagination
+                            count={totalPages}
+                            page={page}
+                            onChange={handlePageChange}
+                            size="large"
+                            renderItem={(item) => (
+                              <PaginationItem
+                                {...item}
+                                 sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+                              />
+                            )}
+                          />
+                        </Box>
+                      )}
         </CardContent>
       </Card>
 

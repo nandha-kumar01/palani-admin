@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Filter } from 'iconoir-react';
 import {
   Box,
   Paper,
@@ -12,6 +13,7 @@ import {
   TableRow,
   Typography,
   Pagination,
+  PaginationItem,
   FormControl,
   InputLabel,
   Select,
@@ -54,6 +56,8 @@ import {
   LocationOn,
   Map,
   CheckCircle,
+  FilterList,
+  RestartAlt,
   Close
 } from '@mui/icons-material';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -152,8 +156,15 @@ const CityPage = () => {
     isActive: true
   });
   
-  // Filter states
-  const [statusFilter, setStatusFilter] = useState('');
+  // Filter states - temp inputs and applied filters (apply on button click)
+  const [tempFilters, setTempFilters] = useState({
+    cityName: '',
+    statusFilter: ''
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    cityName: '',
+    statusFilter: ''
+  });
   const [sortBy, setSortBy] = useState('name');
 
   // Notification helper function
@@ -400,6 +411,9 @@ const CityPage = () => {
     setSelectedState(event.target.value);
     setPage(1);
     setSearchTerm('');
+    // Reset filters when changing state
+    setTempFilters({ cityName: '', statusFilter: '' });
+    setAppliedFilters({ cityName: '', statusFilter: '' });
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
@@ -408,6 +422,18 @@ const CityPage = () => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    setPage(1);
+  };
+
+  // Filter handlers: apply only when Filter button clicked
+  const handleApplyFilters = () => {
+    setAppliedFilters({ ...tempFilters });
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setTempFilters({ cityName: '', statusFilter: '' });
+    setAppliedFilters({ cityName: '', statusFilter: '' });
     setPage(1);
   };
 
@@ -547,12 +573,15 @@ const CityPage = () => {
       city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       city.stateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       city.countryName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === '' || 
-      (statusFilter === 'active' && city.isActive) ||
-      (statusFilter === 'inactive' && !city.isActive);
 
-    return matchesSearch && matchesStatus;
+    const matchesCityName = appliedFilters.cityName === '' ||
+      city.name.toLowerCase().includes(appliedFilters.cityName.toLowerCase());
+
+    const matchesStatus = appliedFilters.statusFilter === '' || 
+      (appliedFilters.statusFilter === 'active' && city.isActive) ||
+      (appliedFilters.statusFilter === 'inactive' && !city.isActive);
+
+    return matchesSearch && matchesCityName && matchesStatus;
   }).sort((a, b) => {
     switch (sortBy) {
       case 'name':
@@ -596,7 +625,7 @@ const CityPage = () => {
 
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box>
         {/* Loading Animation Overlay */}
         {showLoadingAnimation && (
           <Box
@@ -686,29 +715,29 @@ const CityPage = () => {
               <StatCard
                 title="Total Cities"
                 value={stats.total}
-                icon={<LocationCity sx={{ fontSize: 30 }} />}
+                icon={<LocationCity sx={{ fontSize: 38 }} />}
                 color="#667eea"
                 loading={statsLoading}
               />
               <StatCard
                 title="Active Cities"
                 value={stats.active}
-                icon={<LocationOn sx={{ fontSize: 30 }} />}
-                color="#22c55e"
+                icon={<LocationOn sx={{ fontSize: 38 }} />}
+                color="#764ba2"
                 loading={statsLoading}
               />
               <StatCard
                 title="Inactive Cities"
                 value={stats.inactive}
-                icon={<Place sx={{ fontSize: 30 }} />}
-                color="#ef4444"
+                icon={<Place sx={{ fontSize: 38 }} />}
+                color="#8B5CF6"
                 loading={statsLoading}
               />
               <StatCard
                 title="Recently Added"
                 value={stats.recentlyAdded}
-                icon={<Map sx={{ fontSize: 30 }} />}
-                color="#f59e0b"
+                icon={<Map sx={{ fontSize: 38 }} />}
+                color="#667eea"
                 loading={statsLoading}
               />
             </Box>
@@ -737,10 +766,10 @@ const CityPage = () => {
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    <FilterAlt />
+                  <Filter width={20} height={20} />
                   </IconButton>
-                  <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
-                    City Management
+                   <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                    City
                   </Typography>
                 </Box>
                 
@@ -810,7 +839,26 @@ const CityPage = () => {
               gap: 3 
             }}>
               <Box>
-                <FormControl fullWidth>
+                <FormControl sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                   <InputLabel>Select Country</InputLabel>
                   <Select
                     value={selectedCountry}
@@ -842,7 +890,26 @@ const CityPage = () => {
               </Box>
               
               <Box>
-                <FormControl fullWidth>
+                <FormControl sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                   <InputLabel>Select State</InputLabel>
                   <Select
                     value={selectedState}
@@ -910,12 +977,57 @@ const CityPage = () => {
                   gap: 3 
                 }}>
                   <Box>
-                    <FormControl fullWidth>
+                    <TextField
+                      fullWidth
+                      placeholder="Search by city name..."
+                      value={tempFilters.cityName}
+                      onChange={(e) => setTempFilters(prev => ({ ...prev, cityName: e.target.value }))}
+                      sx={{
+                        borderRadius: 2,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon sx={{ color: '#667eea' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      label="City Name"
+                    />
+                  </Box>
+                  
+                  <Box>
+                    <FormControl sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }} fullWidth>
                       <InputLabel>Filter by Status</InputLabel>
                       <Select
-                        value={statusFilter}
+                        value={tempFilters.statusFilter}
                         label="Filter by Status"
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={(e) => setTempFilters(prev => ({ ...prev, statusFilter: e.target.value }))}
                         sx={{ borderRadius: 2 }}
                       >
                         <MenuItem value="">All Status</MenuItem>
@@ -924,44 +1036,39 @@ const CityPage = () => {
                       </Select>
                     </FormControl>
                   </Box>
-                  
-                  <Box>
-                    <FormControl fullWidth>
-                      <InputLabel>Sort by</InputLabel>
-                      <Select
-                        value={sortBy}
-                        label="Sort by"
-                        onChange={(e) => setSortBy(e.target.value)}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        <MenuItem value="name">City Name</MenuItem>
-                        <MenuItem value="state">State</MenuItem>
-                        <MenuItem value="status">Status</MenuItem>
-                        <MenuItem value="serial">Serial Number</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
                 </Box>
-                
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+
+                <Box sx={{ display: "flex", gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+
                   <Button
                     variant="outlined"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('');
-                      setSortBy('name');
-                    }}
-                    sx={{ 
-                      borderRadius: 2,
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      '&:hover': {
-                        borderColor: '#5a6fd8',
-                        backgroundColor: '#667eea15',
-                      },
-                    }}
-                  >
-                    Reset Filters
+                    onClick={handleResetFilters}
+                    startIcon={<RestartAlt />}
+                                         sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
+                                       >         
+                      Reset
+                  </Button>
+                 
+                  <Button
+                    variant="contained"
+                    onClick={handleApplyFilters}
+                    startIcon={<FilterList />}
+                                          sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }} 
+                                       >
+                    Filter
                   </Button>
                 </Box>
               </Box>
@@ -971,25 +1078,8 @@ const CityPage = () => {
 
         {/* Cities Table */}
         <Card>
-          <CardContent sx={{ p: 1, '&:last-child': { pb: 1 }, height: "550px", overflow: 'hidden' }}>
-            <TableContainer sx={{ 
-              maxHeight: '460px', 
-              overflow: 'auto',
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: '#f1f1f1',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: '#c1c1c1',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                backgroundColor: '#a8a8a8',
-              },
-            }}>
+          <CardContent>
+            <TableContainer>
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
@@ -1163,13 +1253,38 @@ const CityPage = () => {
             {/* Pagination */}
             {selectedState && cities.length > 0 && totalPages > 1 && (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                />
+                 <Pagination
+                     count={totalPages}
+                     page={page}
+                     onChange={handlePageChange}
+                     size="large"
+                     renderItem={(item) => (
+                       <PaginationItem
+                         {...item}
+                         sx={{
+                           mx: 0.5,
+                           minWidth: 42,
+                           height: 42,
+                           borderRadius: '50%',
+                           fontSize: '15px',
+                           fontWeight: 600,
+                           transition: 'all 0.25s ease',
+               
+                           '&.Mui-selected': {
+                             background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                             color: '#fff',
+                             boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+                             transform: 'scale(1.05)',
+                           },
+               
+                           '&:hover': {
+                             backgroundColor: '#e3f2fd',
+                             transform: 'translateY(-2px)',
+                           },
+                         }}
+                       />
+                     )}
+                   />
               </Box>
             )}
           </CardContent>

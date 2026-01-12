@@ -18,7 +18,9 @@ import {
   IconButton,
   Alert,
   Skeleton,
-  CircularProgress
+  CircularProgress,
+  Pagination,
+    PaginationItem,
 } from '@mui/material';
 import { notifications } from '@mantine/notifications';
 import {
@@ -173,6 +175,7 @@ function GalleryContent() {
             {loading ? <Skeleton variant="circular" width={40} height={40} /> : icon}
           </Box>
         </Box>
+                    
       </CardContent>
     </Card>
   );
@@ -383,8 +386,24 @@ function GalleryContent() {
     }
   };
 
+  const [viewImage, setViewImage] = useState<GalleryImage | null>(null);
+
+
+  const [page, setPage] = useState(1);
+const rowsPerPage = 8; // grid-ku nallaa irukkum
+
+const totalPages = Math.ceil(images.length / rowsPerPage);
+
+const paginatedImages = images.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box >
       {/* Loading Animation Overlay */}
       {showLoadingAnimation && (
         <Box
@@ -462,9 +481,7 @@ function GalleryContent() {
           `}</style>
         </Box>
       )}
-      
-       {/* Statistics Cards */}
-      <Box sx={{ mb: 4 }}>
+    
      
         <Box sx={{ 
           display: 'grid', 
@@ -475,50 +492,47 @@ function GalleryContent() {
           <StatCard
             title="Total Images"
             value={stats.total}
-            icon={<Photo sx={{ fontSize: 30 }} />}
+            icon={<Photo sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
           <StatCard
             title="Recent Uploads"
             value={stats.recentUploads}
-            icon={<TrendingUp sx={{ fontSize: 30 }} />}
+            icon={<TrendingUp sx={{ fontSize: 38 }} />}
             color="#764ba2"
             loading={statsLoading}
           />
           <StatCard
             title="This Month"
             value={stats.thisMonth}
-            icon={<AccessTime sx={{ fontSize: 30 }} />}
+            icon={<AccessTime sx={{ fontSize: 38 }} />}
             color="#8B5CF6"
             loading={statsLoading}
           />
           <StatCard
             title="Categories"
             value={stats.categories}
-            icon={<Collections sx={{ fontSize: 30 }} />}
+            icon={<Collections sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
         </Box>
-      </Box>
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" sx={{ color: 'text.primary' }}>
-          Gallery Management
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+          Gallery
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
-          sx={{ 
-            borderRadius: '25px',
-            px: 3,
-            py: 1.5,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #5a67d8 0%, #68306d 100%)',
-            }
-          }}
+          sx={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                    },
+                  }}
         >
           Add Image
         </Button>
@@ -530,9 +544,21 @@ function GalleryContent() {
 
       {/* Images Grid - Food Menu Style */}
       {loading ? (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 3,alignItems: 'stretch' }}>
           {Array.from(new Array(8)).map((_, index) => (
-            <Card sx={{ borderRadius: 3, overflow: 'hidden' }} key={index}>
+            <Card
+  sx={{
+    height: '100%',          // 🔥 full height
+    display: 'flex',
+    flexDirection: 'column', // 🔥 image top, content bottom
+    borderRadius: 3,
+    overflow: 'hidden',
+    transition: 'transform 0.2s',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+    },
+  }} key={index}>
               <Skeleton variant="rectangular" height={200} />
               <CardContent>
                 <Skeleton variant="text" sx={{ fontSize: '1.2rem' }} />
@@ -543,27 +569,40 @@ function GalleryContent() {
         </Box>
       ) : (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 3 }}>
-          {images.map((image) => (
-              <Card key={image._id} 
-                sx={{ 
-                  borderRadius: 3, 
-                  overflow: 'hidden',
-                  position: 'relative',
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
-                  }
-                }}
-              >
+       {paginatedImages.map((image) => (
+
+            <Card
+  key={image._id}
+  sx={{
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: 3,
+    overflow: 'hidden',
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+    },
+  }}
+>
+
                 {/* Image */}
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={image.imageUrl}
-                  alt={image.title}
-                  sx={{ objectFit: 'cover' }}
-                />
+               <CardMedia
+  component="img"
+  image={image.imageUrl}
+    onClick={() => setViewImage(image)}
+  alt={image.title}
+  sx={{
+    height: 200,       
+    width: '100%',      
+    objectFit: 'cover', 
+    flexShrink: 0,
+        cursor: 'pointer',                 
+  }}
+/>
+
                 
                 {/* Action Buttons Overlay */}
                 <Box
@@ -605,32 +644,41 @@ function GalleryContent() {
                 </Box>
 
                 {/* Content */}
-                <CardContent sx={{ p: 2 }}>
-                  <Typography 
-                    variant="h6" 
-                    component="h3" 
-                    sx={{ 
-                      fontWeight: 600,
-                      mb: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
+               <CardContent
+  sx={{
+    p: 2,
+    flexGrow: 1,                 // 🔥 equal content height
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  }}
+>
+
+                 <Typography
+  variant="h6"
+  sx={{
+    fontWeight: 600,
+    mb: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  }}
+>
+
                     {image.title}
                   </Typography>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: 1.4,
-                      minHeight: '2.8em'
-                    }}
-                  >
+                  <Typography
+  variant="body2"
+  color="text.secondary"
+  sx={{
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    minHeight: '2.8em', 
+  }}
+>
+
                     {image.description}
                   </Typography>
                 </CardContent>
@@ -826,7 +874,95 @@ function GalleryContent() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+      <Dialog
+  open={Boolean(viewImage)}
+  onClose={() => setViewImage(null)}
+  maxWidth="md"
+  fullWidth
+>
+  {viewImage && (
+    <>
+      {/* Image Section */}
+      <Box
+        sx={{
+          width: '100%',
+          height: 400,
+          backgroundColor: '#000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box
+          component="img"
+          src={viewImage.imageUrl}
+          alt={viewImage.title}
+          sx={{
+            maxHeight: '100%',
+            maxWidth: '100%',
+            objectFit: 'contain', // 🔥 full image, no crop
+          }}
+        />
+      </Box>
+
+      {/* Content Section */}
+      <DialogContent sx={{ pt: 3 }}>
+        <Typography variant="h5" fontWeight={600} gutterBottom>
+          {viewImage.title}
+        </Typography>
+
+        <Typography variant="body1" color="text.secondary">
+          {viewImage.description}
+        </Typography>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={() => setViewImage(null)} variant="contained">
+          Close
+        </Button>
+      </DialogActions>
+    </>
+  )}
+</Dialog>
+                   {/* Pagination */}
+                               {totalPages > 1 && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                        <Pagination
+                          count={totalPages}
+                          page={page}
+                          onChange={handlePageChange}
+                          size="large"
+                          renderItem={(item) => (
+                            <PaginationItem
+                              {...item}
+                              sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+                            />
+                          )}
+                        />
+                      </Box>
+                    )}
+    </Box>
+    
   );
 }
 

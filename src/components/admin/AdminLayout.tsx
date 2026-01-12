@@ -142,7 +142,7 @@ const menuItems = [
     children: [
       { text: 'Temples', icon: <TempleHinduIcon />, path: '/admin/temples' },
       { text: 'Annadhanam', icon: <Restaurant />, path: '/admin/annadhanam' },
-      { text: 'Madangal (Stay)', icon: <ChaletIcon/>, path: '/admin/madangal' },
+      { text: 'Madangal', icon: <ChaletIcon/>, path: '/admin/madangal' },
     ]
   },
   { 
@@ -171,7 +171,7 @@ const menuItems = [
       { text: 'Security', icon: <Security />, path: '/admin/security' },
       { text: 'Notifications', icon: <Notifications />, path: '/admin/notifications' },
       { text: 'Device Management', icon: <PhoneAndroid />, path: '/admin/devices' },
-      { text: 'User Support', icon: <Campaign />, path: '/admin/user-support' },
+      { text: 'Support Tickets', icon: <Campaign />, path: '/admin/user-support' },
       { text: 'Deleted Users', icon: <DeleteForever />, path: '/admin/users/deleted' },
     ]
   },

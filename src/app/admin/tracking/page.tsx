@@ -311,7 +311,7 @@ export default function TrackingPage() {
 
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box >
         {/* Loading Animation Overlay */}
         {showLoadingAnimation && (
           <Box
@@ -391,8 +391,8 @@ export default function TrackingPage() {
         )}
         
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            Live Location Tracking
+<Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+              Live Location Tracking
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
             <Typography variant="body2" color="text.secondary">

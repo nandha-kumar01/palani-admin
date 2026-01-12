@@ -32,6 +32,8 @@ import {
   MenuItem,
   Skeleton,
   Divider,
+  Pagination,
+  PaginationItem,
 } from '@mui/material';
 import {
   Search,
@@ -118,14 +120,15 @@ const StatCard = ({ title, value, icon, color, subtitle, loading = false }: {
   subtitle?: string;
   loading?: boolean;
 }) => (
-  <Card sx={{
+ <Card sx={{
     background: `linear-gradient(135deg, ${color}15 0%, ${color}25 100%)`,
     border: `1px solid ${color}30`,
     transform: 'translateY(0)',
     transition: 'all 0.3s ease',
+    cursor: 'pointer',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: `0 8px 25px ${color}25`,
+      boxShadow: `0 0 20px #2196F3, 0 8px 25px ${color}25`,
       border: `1px solid ${color}50`,
     }
   }}>
@@ -387,17 +390,39 @@ export default function UserSupportPage() {
   // Filter functions
   const handleApplyFilters = () => {
     fetchSupportTickets();
-    showNotification('Filters applied successfully!');
   };
 
-  const handleResetFilters = () => {
-    setTypeFilter('');
-    setStatusFilter('');
-    setPriorityFilter('');
-    setSearchTerm('');
-    setShowSearchFilter(false);
-    showNotification('Filters reset successfully!', 'info');
-  };
+  const handleResetFilters = async () => {
+  setTypeFilter('');
+  setStatusFilter('');
+  setPriorityFilter('');
+  setSearchTerm('');
+  setShowSearchFilter(false);
+  setPage(1);
+
+  // IMPORTANT: fetch without filters
+  try {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+
+    const response = await fetch('/api/admin/user-support', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setSupportTickets(data.tickets || []);
+      setStats(data.stats || {});
+      setPagination(data.pagination || {});
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Debug token function
   const debugToken = () => {
@@ -411,8 +436,9 @@ export default function UserSupportPage() {
   };
 
   useEffect(() => {
+    // Fetch only on initial mount. Filters/search will be applied when user clicks "Filter".
     fetchSupportTickets();
-  }, [typeFilter, statusFilter, priorityFilter, searchTerm]);
+  }, []);
 
   // Timer for loading animation
   useEffect(() => {
@@ -658,62 +684,79 @@ export default function UserSupportPage() {
     });
   };
 
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(supportTickets.length / rowsPerPage);
+
+const paginatedTickets = supportTickets.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+  
+  // Note: page will be reset when user applies filters via the Filter button.
+  
+
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box >
         
         {/* Statistics Cards */}
-        <Box sx={{ mb: 4 }}>
           <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(6, 1fr)' }, 
-            gap: 2,
-            mb: 3 
-          }}>
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: 3, 
+          mb: 3 
+        }}>
             <StatCard
               title="Total Tickets"
               value={stats.totalTickets.toLocaleString()}
-              icon={<HelpOutline sx={{ fontSize: 30 }} />}
+              icon={<HelpOutline sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Open Tickets"
               value={stats.openTickets}
-              icon={<Schedule sx={{ fontSize: 30 }} />}
-              color="#ff9800"
+              icon={<Schedule sx={{ fontSize: 38 }} />}
+              color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="In Progress"
               value={stats.inProgressTickets}
-              icon={<AdminPanelSettings sx={{ fontSize: 30 }} />}
-              color="#2196f3"
+              icon={<AdminPanelSettings sx={{ fontSize: 38 }} />}
+            color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="Resolved"
               value={stats.resolvedTickets}
-              icon={<CheckCircle sx={{ fontSize: 30 }} />}
-              color="#4caf50"
+              icon={<CheckCircle sx={{ fontSize: 38 }} />}
+              color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Avg Resolution"
               value={`${stats.averageResolutionTime}h`}
-              icon={<Schedule sx={{ fontSize: 30 }} />}
+              icon={<Schedule sx={{ fontSize: 38 }} />}
               color="#9c27b0"
               loading={statsLoading}
             />
             <StatCard
               title="Satisfaction"
               value={`${stats.userSatisfactionRating}/5`}
-              icon={<Star sx={{ fontSize: 30 }} />}
-              color="#ff5722"
+              icon={<Star sx={{ fontSize: 38 }} />}
+              
+              color="#667eea"
               loading={statsLoading}
             />
           </Box>
-        </Box>
 
         {/* Support Tickets Table */}
         <Card>
@@ -739,8 +782,8 @@ export default function UserSupportPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: '#667eea' }}>
-                  User Support Tickets
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                Support Tickets
                 </Typography>
               </Box>
               <Box display="flex" alignItems="center" gap={2}>
@@ -764,187 +807,171 @@ export default function UserSupportPage() {
 
             {/* Individual Filter Fields */}
             {showSearchFilter && (
-              <Box mb={3} sx={{ 
+                <Box mb={3} sx={{ 
                 backgroundColor: '#f8f9ff', 
                 borderRadius: 2, 
                 p: 3,
                 border: '1px solid #e0e7ff' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#667eea', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: 'bold'  }}>
                   Filter Support Tickets
                 </Typography>
                 
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, 
-                  gap: 2,
-                  mb: 2 
-                }}>
-                  <TextField
-                    fullWidth
-                    label="Search"
-                    placeholder="Search tickets..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Search color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
+                <Box sx={{ mb: 2 }}>
+                  {/* Top row: 4 Filter fields */}
+                  <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: 2,
+                    mb: 2
+                  }}>
+                    <TextField
+                      fullWidth
+                      label="Search"
+                      placeholder="Search tickets..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Search color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    select
-                    label="Type"
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Types</MenuItem>
-                    <MenuItem value="bug">Bug Report</MenuItem>
-                    <MenuItem value="feature_request">Feature Request</MenuItem>
-                    <MenuItem value="general_inquiry">General Inquiry</MenuItem>
-                    <MenuItem value="technical_support">Technical Support</MenuItem>
-                    <MenuItem value="account_issue">Account Issue</MenuItem>
-                  </TextField>
+                      }}
+                    />
 
-                  <TextField
-                    fullWidth
-                    select
-                    label="Status"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
+                    <TextField
+                      fullWidth
+                      select
+                      label="Type"
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Status</MenuItem>
-                    <MenuItem value="open">Open</MenuItem>
-                    <MenuItem value="in_progress">In Progress</MenuItem>
-                    <MenuItem value="resolved">Resolved</MenuItem>
-                    <MenuItem value="closed">Closed</MenuItem>
-                  </TextField>
-                </Box>
+                      }}
+                    >
+                      <MenuItem value="">All Types</MenuItem>
+                      <MenuItem value="bug">Bug Report</MenuItem>
+                      <MenuItem value="feature_request">Feature Request</MenuItem>
+                      <MenuItem value="general_inquiry">General Inquiry</MenuItem>
+                      <MenuItem value="technical_support">Technical Support</MenuItem>
+                      <MenuItem value="account_issue">Account Issue</MenuItem>
+                    </TextField>
 
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr', md: '1fr 2fr 1fr' }, 
-                  gap: 2,
-                  mb: 2 
-                }}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Priority"
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: 'white',
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
+                    <TextField
+                      fullWidth
+                      select
+                      label="Status"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">All Priority</MenuItem>
-                    <MenuItem value="low">Low</MenuItem>
-                    <MenuItem value="medium">Medium</MenuItem>
-                    <MenuItem value="high">High</MenuItem>
-                    <MenuItem value="urgent">Urgent</MenuItem>
-                  </TextField>
-                  <Box></Box>
-                  <Box></Box>
-                </Box>
+                      }}
+                    >
+                      <MenuItem value="">All Status</MenuItem>
+                      <MenuItem value="open">Open</MenuItem>
+                      <MenuItem value="in_progress">In Progress</MenuItem>
+                      <MenuItem value="resolved">Resolved</MenuItem>
+                      <MenuItem value="closed">Closed</MenuItem>
+                    </TextField>
 
-                {/* Action Buttons */}
-                <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<RestartAlt />}
-                    onClick={handleResetFilters}
-                    sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        borderColor: '#764ba2',
-                        backgroundColor: '#667eea10',
-                        color: '#764ba2',
-                      },
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  
-                  <Button
-                    variant="contained"
-                    startIcon={<FilterList />}
-                    onClick={handleApplyFilters}
-                    sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                        boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                      },
-                    }}
-                  >
-                    Filter
-                  </Button>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Priority"
+                      value={priorityFilter}
+                      onChange={(e) => setPriorityFilter(e.target.value)}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
+                        },
+                      }}
+                    >
+                      <MenuItem value="">All Priority</MenuItem>
+                      <MenuItem value="low">Low</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="high">High</MenuItem>
+                      <MenuItem value="urgent">Urgent</MenuItem>
+                    </TextField>
+                  </Box>
+
+                  {/* Bottom row: Action buttons aligned to right */}
+                  <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RestartAlt />}
+                      onClick={handleResetFilters}
+                      sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
+                    >
+                      Reset
+                    </Button>
+
+                    <Button
+                      variant="contained"
+                      startIcon={<FilterList />}
+                      onClick={() => {
+                        setPage(1);
+                        handleApplyFilters();
+                      }}
+                      sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }}
+                    >
+                      Filter
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             )}
@@ -1036,7 +1063,7 @@ export default function UserSupportPage() {
                     </TableRow>
                   ) : (
                     // Actual Data Rows
-                    supportTickets.map((ticket, index) => (
+                   paginatedTickets.map((ticket, index) => (
                       <TableRow 
                         key={ticket._id} 
                         hover 
@@ -1057,7 +1084,7 @@ export default function UserSupportPage() {
                               fontSize: '0.875rem'
                             }}
                           >
-                            {index + 1}
+                          {(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         
@@ -1233,6 +1260,44 @@ export default function UserSupportPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+                          {/* Pagination */}
+                                  {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  size="large"
+                  renderItem={(item) => (
+                    <PaginationItem
+                      {...item}
+                      sx={{
+                        mx: 0.5,
+                        minWidth: 42,
+                        height: 42,
+                        borderRadius: '50%',
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        transition: 'all 0.25s ease',
+            
+                        '&.Mui-selected': {
+                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                          color: '#fff',
+                          boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+                          transform: 'scale(1.05)',
+                        },
+            
+                        '&:hover': {
+                          backgroundColor: '#e3f2fd',
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </Box>
+            )}
           </CardContent>
         </Card>
 

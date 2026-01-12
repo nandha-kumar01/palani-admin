@@ -30,6 +30,8 @@ import {
   DialogActions,
   Stack,
   Skeleton,
+    Pagination,
+  PaginationItem,
 } from '@mui/material';
 import {
   Search,
@@ -54,6 +56,7 @@ import {
   DirectionsWalk,
   Flag,
   LocationOn,
+  
 } from '@mui/icons-material';
 import { Filter } from 'iconoir-react';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -100,12 +103,14 @@ const StatCard = ({ title, value, icon, color, loading }: {
     border: `1px solid ${color}30`,
     transform: 'translateY(0)',
     transition: 'all 0.3s ease',
+    cursor: 'pointer',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: `0 8px 25px ${color}25`,
+      boxShadow: `0 0 20px #2196F3, 0 8px 25px ${color}25`,
       border: `1px solid ${color}50`,
     }
   }}>
+
     <CardContent>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box>
@@ -180,20 +185,22 @@ export default function DeletedUsersPage() {
 
   // Filter functions
   const handleApplyFilters = () => {
+      setPage(1);       // 🔥 important
     fetchDeletedUsers();
-    showNotification('Filters applied successfully!', 'success');
   };
+const handleResetFilters = () => {
+  setNameFilter('');
+  setEmailFilter('');
+  setPhoneFilter('');
+  setRoleFilter('');
+  setStatusFilter('');
+  setSearchTerm('');
+  setShowSearchFilter(false);
 
-  const handleResetFilters = () => {
-    setNameFilter('');
-    setEmailFilter('');
-    setPhoneFilter('');
-    setRoleFilter('');
-    setStatusFilter('');
-    setSearchTerm('');
-    setShowSearchFilter(false);
-    showNotification('Filters reset successfully!', 'info');
-  };
+  // 🔥 reset button click pannina data refresh
+  fetchDeletedUsers();
+};
+
 
   useEffect(() => {
     fetchDeletedUsers();
@@ -489,6 +496,25 @@ export default function DeletedUsersPage() {
     );
   };
 
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const handlePageChange = (_: any, value: number) => {
+  setPage(value);
+};
+
+  const totalPages = Math.ceil(deletedUsers.length / rowsPerPage);
+
+const paginatedUsers = deletedUsers.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+ useEffect(() => {
+  fetchDeletedUsers();
+}, []);
+ 
+
   return (
     <AdminLayout>
       <Box>
@@ -505,28 +531,28 @@ export default function DeletedUsersPage() {
             <StatCard
               title="Total Deleted"
               value={stats.totalDeleted.toLocaleString()}
-              icon={<DeleteForever sx={{ fontSize: 30 }} />}
+              icon={<DeleteForever sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Deleted Today"
               value={stats.deletedToday}
-              icon={<Today sx={{ fontSize: 30 }} />}
+              icon={<Today sx={{ fontSize: 38 }} />}
               color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="This Week"
               value={stats.deletedThisWeek}
-              icon={<Schedule sx={{ fontSize: 30 }} />}
+              icon={<Schedule sx={{ fontSize: 38 }} />}
               color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="This Month"
               value={stats.deletedThisMonth}
-              icon={<TrendingDown sx={{ fontSize: 30 }} />}
+              icon={<TrendingDown sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
@@ -557,7 +583,7 @@ export default function DeletedUsersPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: '#667eea' }}>
+               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                   Deleted Users List
                 </Typography>
               </Box>
@@ -601,7 +627,7 @@ export default function DeletedUsersPage() {
                 p: 3,
                 border: '1px solid #e0e7ff' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#667eea', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: 'bold' }}>
                   Filter Deleted Users
                 </Typography>
                 
@@ -695,49 +721,40 @@ export default function DeletedUsersPage() {
 
                 {/* Action Buttons */}
                 <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+                 
+                 
                   <Button
                     variant="outlined"
                     startIcon={<RestartAlt />}
                     onClick={handleResetFilters}
-                    sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        borderColor: '#764ba2',
-                        backgroundColor: '#667eea10',
-                        color: '#764ba2',
-                      },
-                    }}
+                sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
                   >
                     Reset
                   </Button>
-                  
+
                   <Button
                     variant="contained"
                     startIcon={<FilterList />}
                     onClick={handleApplyFilters}
                     sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                        boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                      },
-                    }}
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }}  
                   >
                     Filter
                   </Button>
+                 
+                  
                 </Box>
               </Box>
             )}
@@ -846,7 +863,7 @@ export default function DeletedUsersPage() {
                     </TableRow>
                   ) : (
                     // Actual Data Rows
-                    deletedUsers.map((user, index) => (
+                    paginatedUsers.map((user, index) => (
                       <TableRow 
                         key={user._id} 
                         hover 
@@ -867,7 +884,7 @@ export default function DeletedUsersPage() {
                               fontSize: '0.875rem'
                             }}
                           >
-                            {index + 1}
+{(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         
@@ -1106,6 +1123,43 @@ export default function DeletedUsersPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+                                  {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  size="large"
+                  renderItem={(item) => (
+                    <PaginationItem
+                      {...item}
+                      sx={{
+                        mx: 0.5,
+                        minWidth: 42,
+                        height: 42,
+                        borderRadius: '50%',
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        transition: 'all 0.25s ease',
+            
+                        '&.Mui-selected': {
+                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                          color: '#fff',
+                          boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+                          transform: 'scale(1.05)',
+                        },
+            
+                        '&:hover': {
+                          backgroundColor: '#e3f2fd',
+                          transform: 'translateY(-2px)',
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </Box>
+            )}
           </CardContent>
         </Card>
 

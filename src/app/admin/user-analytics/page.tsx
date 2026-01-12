@@ -5,6 +5,7 @@ import Player from 'react-lottie-player';
 import Loading from '../../../../Loading.json';
 import {
   Box,
+  Button,
   Typography,
   Card,
   CardContent,
@@ -115,17 +116,16 @@ const StatCard = ({ title, value, icon, color, loading = false, trend, trendValu
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
 }) => (
-  <Card sx={{
-    border: `1px solid #e0e0e0`,
+ <Card sx={{
+    background: `linear-gradient(135deg, ${color}15 0%, ${color}25 100%)`,
+    border: `1px solid ${color}30`,
     transform: 'translateY(0)',
     transition: 'all 0.3s ease',
     cursor: 'pointer',
-    position: 'relative',
-    overflow: 'visible',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: `0 4px 20px rgba(0,0,0,0.1)`,
-      border: `1px solid #d0d0d0`,
+      boxShadow: `0 0 20px #2196F3, 0 8px 25px ${color}25`,
+      border: `1px solid ${color}50`,
     }
   }}>
     <CardContent sx={{ position: 'relative' }}>
@@ -175,10 +175,20 @@ const ProgressCard = ({ title, data, total, color }: {
   <Card sx={{ height: '100%' }}>
     <CardContent>
       <Box display="flex" alignItems="center" gap={1} mb={2}>
-        <PieChart sx={{ color }} />
-        <Typography variant="h6" fontWeight="bold">
-          {title}
-        </Typography>
+         <Typography
+    variant="h6"
+    fontWeight="bold"
+    sx={{
+      display: 'inline-block',
+      backgroundColor: '#e0e7ff',
+      color: '#3730a3',
+      px: 2,
+      py: 0.5,
+      borderRadius: 1.5,
+    }}
+  >
+    {title}
+  </Typography>
       </Box>
       <Stack spacing={2}>
         {data.map((item, index) => {
@@ -329,41 +339,33 @@ export default function UserAnalyticsPage() {
 
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box >
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ 
-              fontWeight: 'bold', 
-              color: '#374151',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2
-            }}>
-              <Assessment sx={{ fontSize: 40, color: '#667eea' }} />
+                           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+
               User Analytics
             </Typography>
           
           </Box>
           
-          <Tooltip title="Refresh Analytics">
-            <IconButton 
+          <Button 
+                  variant="outlined" 
               onClick={fetchAnalytics}
-              disabled={loading}
-              sx={{
-                backgroundColor: '#667eea',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: '#5a6fd8',
-                },
-                '&:disabled': {
-                  backgroundColor: '#e0e0e0',
-                }
-              }}
-            >
-              {loading ? <CircularProgress size={24} color="inherit" /> : <Refresh />}
-            </IconButton>
-          </Tooltip>
+
+                  startIcon={<Refresh />}
+                  sx={{
+                    borderColor: '#e0e0e0',
+                    color: '#666',
+                    '&:hover': {
+                      borderColor: '#bdbdbd',
+                      backgroundColor: '#f5f5f5',
+                    },
+                  }}
+                >
+                  Refresh
+                </Button>
         </Box>
 
         {/* Overview Stats */}
@@ -376,38 +378,30 @@ export default function UserAnalyticsPage() {
           <StatCard
             title="Total Users"
             value={data?.overview.totalUsers.toLocaleString() || 0}
-            icon={<People sx={{ fontSize: 48 }} />}
+            icon={<People sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={loading}
-            trend="up"
-            trendValue={data ? `+${data.overview.newUsersLast7Days} this week` : undefined}
           />
           <StatCard
             title="Active Users"
             value={data?.overview.activeUsers.toLocaleString() || 0}
-            icon={<CheckCircle sx={{ fontSize: 48 }} />}
-            color="#4caf50"
+            icon={<CheckCircle sx={{ fontSize: 38 }} />}
+            color="#764ba2"
             loading={loading}
-            trend="up"
-            trendValue={data ? `${data.userActivityTrends.activePercentage}% of total` : undefined}
           />
           <StatCard
             title="Currently Tracking"
             value={data?.overview.trackingUsers.toLocaleString() || 0}
-            icon={<LocationOn sx={{ fontSize: 48 }} />}
-            color="#ff9800"
+            icon={<LocationOn sx={{ fontSize: 38 }} />}
+            color="#8B5CF6"
             loading={loading}
-            trend="neutral"
-            trendValue={data ? `${data.userActivityTrends.trackingPercentage}% tracking` : undefined}
           />
           <StatCard
             title="On Pathayathirai"
             value={data?.overview.usersOnPathayathirai.toLocaleString() || 0}
-            icon={<DirectionsWalk sx={{ fontSize: 48 }} />}
-            color="#9c27b0"
+            icon={<DirectionsWalk sx={{ fontSize: 38 }} />}
+            color="#667eea"
             loading={loading}
-            trend="up"
-            trendValue={data ? `${data.overview.completedPathayathirai} completed` : undefined}
           />
         </Box>
 
@@ -421,29 +415,29 @@ export default function UserAnalyticsPage() {
           <StatCard
             title="New Users (7 days)"
             value={data?.overview.newUsersLast7Days.toLocaleString() || 0}
-            icon={<PersonAdd sx={{ fontSize: 48 }} />}
-            color="#2196f3"
+            icon={<PersonAdd sx={{ fontSize: 38 }} />}
+            color="#667eea"
             loading={loading}
           />
           <StatCard
             title="New Users (30 days)"
             value={data?.overview.newUsersLast30Days.toLocaleString() || 0}
-            icon={<TrendingUp sx={{ fontSize: 48 }} />}
-            color="#00bcd4"
+            icon={<TrendingUp sx={{ fontSize: 38 }} />}
+            color="#764ba2"
             loading={loading}
           />
           <StatCard
             title="Users in Groups"
             value={data?.overview.usersInGroups.toLocaleString() || 0}
-            icon={<Group sx={{ fontSize: 48 }} />}
-            color="#795548"
+            icon={<Group sx={{ fontSize: 38 }} />}
+            color="#8B5CF6"
             loading={loading}
           />
           <StatCard
             title="Solo Travelers"
             value={data?.overview.soloTravelers.toLocaleString() || 0}
-            icon={<People sx={{ fontSize: 48 }} />}
-            color="#607d8b"
+            icon={<People sx={{ fontSize: 38 }} />}
+             color="#667eea"
             loading={loading}
           />
         </Box>
@@ -574,11 +568,22 @@ export default function UserAnalyticsPage() {
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
-                  <Group sx={{ color: '#667eea' }} />
-                  <Typography variant="h6" fontWeight="bold">
-                    Top Groups by Members
-                  </Typography>
-                </Box>
+  <Typography
+    variant="h6"
+    fontWeight="bold"
+    sx={{
+      display: 'inline-block',         
+      backgroundColor: '#e0e7ff',        
+      color: '#3730a3',                 
+      px: 2,                             
+      py: 0.5,                          
+      borderRadius: 1.5,                 
+    }}
+  >
+    Top Groups by Members
+  </Typography>
+</Box>
+
                 {loading ? (
                   <Stack spacing={2}>
                     {[...Array(5)].map((_, index) => (
@@ -640,14 +645,24 @@ export default function UserAnalyticsPage() {
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
-                  <Timeline sx={{ color: '#667eea' }} />
-                  <Typography variant="h6" fontWeight="bold">
+                   <Typography
+    variant="h6"
+    fontWeight="bold"
+    sx={{
+      display: 'inline-block',         
+      backgroundColor: '#e0e7ff',        
+      color: '#3730a3',                 
+      px: 2,                             
+      py: 0.5,                          
+      borderRadius: 1.5,                 
+    }}
+  >
                     Recent User Activities
                   </Typography>
                 </Box>
                 {loading ? (
                   <Stack spacing={2}>
-                    {[...Array(5)].map((_, index) => (
+                    {[...Array(8)].map((_, index) => (
                       <Box key={index} display="flex" alignItems="center" gap={2}>
                         <Skeleton variant="circular" width={40} height={40} />
                         <Box flex={1}>
@@ -658,7 +673,7 @@ export default function UserAnalyticsPage() {
                     ))}
                   </Stack>
                 ) : (
-                  <List sx={{ py: 0, maxHeight: 300, overflow: 'auto' }}>
+                  <List sx={{ py: 0, maxHeight: 350, overflow: 'auto' }}>
                     {data?.recentActivities.map((activity) => (
                       <ListItem key={activity._id} sx={{ px: 0 }}>
                         <ListItemAvatar>

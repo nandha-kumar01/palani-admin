@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import Player from 'react-lottie-player';
+import { Filter } from 'iconoir-react';
 import Loading from '../../../../Loading.json';
 import {
   Box,
@@ -29,7 +30,6 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
-  Pagination,
   InputAdornment,
   Menu,
   Divider,
@@ -50,7 +50,9 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  Collapse
+  Collapse,
+  Pagination,
+ PaginationItem,
 } from '@mui/material';
 import {
   Notifications,
@@ -97,6 +99,7 @@ import {
   ComputerOutlined,
   KeyboardArrowDown,
   KeyboardArrowUp,
+  RestartAlt,
   AccessTime,
   DateRange,
   TrendingDown,
@@ -208,6 +211,7 @@ const StatCard = ({ title, value, icon, color, subtitle, loading = false }: {
   subtitle?: string;
   loading?: boolean;
 }) => (
+ 
   <Card sx={{
     background: `linear-gradient(135deg, ${color}15 0%, ${color}25 100%)`,
     border: `1px solid ${color}30`,
@@ -216,7 +220,8 @@ const StatCard = ({ title, value, icon, color, subtitle, loading = false }: {
     cursor: 'pointer',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: `0 8px 25px ${color}25`,
+      boxShadow: `0 0 20px #2196F3, 0 8px 25px ${color}25`,
+      border: `1px solid ${color}50`,
     }
   }}>
     <CardContent>
@@ -284,9 +289,19 @@ export default function NotificationsPage() {
     sortBy: 'createdAt',
     sortOrder: 'desc'
   });
+  // Applied filters are used to actually fetch data only when user clicks "Filter"
+  const [appliedFilters, setAppliedFilters] = useState<NotificationFilters>({
+    type: '',
+    status: '',
+    priority: '',
+    recipientType: '',
+    search: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 10,
     totalPages: 1,
     totalCount: 0
   });
@@ -331,14 +346,14 @@ export default function NotificationsPage() {
       
       const params = new URLSearchParams({
         page: (pagination?.page || 1).toString(),
-        limit: (pagination?.limit || 20).toString(),
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-        ...(filters.type && { type: filters.type }),
-        ...(filters.status && { status: filters.status }),
-        ...(filters.priority && { priority: filters.priority }),
-        ...(filters.recipientType && { recipientType: filters.recipientType }),
-        ...(filters.search && { search: filters.search })
+        limit: (pagination?.limit || 10).toString(),
+        sortBy: appliedFilters.sortBy,
+        sortOrder: appliedFilters.sortOrder,
+        ...(appliedFilters.type && { type: appliedFilters.type }),
+        ...(appliedFilters.status && { status: appliedFilters.status }),
+        ...(appliedFilters.priority && { priority: appliedFilters.priority }),
+        ...(appliedFilters.recipientType && { recipientType: appliedFilters.recipientType }),
+        ...(appliedFilters.search && { search: appliedFilters.search })
       });
 
       const response = await fetch(`/api/admin/notifications?${params}`, {
@@ -372,9 +387,13 @@ export default function NotificationsPage() {
 
       if (result.success) {
         setNotifications(result.data?.notifications || []);
+        // Map API pagination to local pagination shape
+        const apiPagination = result.data?.pagination || {};
         setPagination(prev => ({
           ...prev,
-          ...(result.data?.pagination || {})
+          page: apiPagination.currentPage || prev.page,
+          totalPages: apiPagination.totalPages || prev.totalPages,
+          totalCount: apiPagination.totalCount || prev.totalCount
         }));
         setAnalytics(result.data?.analytics || null);
       } else {
@@ -400,7 +419,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination?.page, pagination?.limit]);
+  }, [appliedFilters, pagination?.page, pagination?.limit]);
 
   useEffect(() => {
     fetchNotifications();
@@ -418,14 +437,10 @@ export default function NotificationsPage() {
   // Handle pagination changes
   const handlePageChange = useCallback((newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
-    // Trigger fetch with new pagination
-    setTimeout(() => fetchNotifications(), 0);
   }, [fetchNotifications]);
 
   const handleLimitChange = useCallback((newLimit: number) => {
     setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
-    // Trigger fetch with new pagination
-    setTimeout(() => fetchNotifications(), 0);
   }, [fetchNotifications]);
 
   const handleCreateNotification = async () => {
@@ -735,185 +750,16 @@ export default function NotificationsPage() {
     }
   ];
 
+  const [showFilters, setShowFilters] = useState(false);
+  // Search filter toggle state
+  const [showSearchFilter, setShowSearchFilter] = useState(false);
+
+
+    
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
-        {/* Enhanced Header with Notification Bell and Count */}
-        <Box sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: 4,
-          p: 4,
-          mb: 4,
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Background decoration */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -20,
-              right: -20,
-              width: 100,
-              height: 100,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.1)',
-            }}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: -30,
-              left: -30,
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.05)',
-            }}
-          />
-
-          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
-            <Box display="flex" alignItems="center" gap={3}>
-              {/* Notification Bell with Badge */}
-              <Badge 
-                badgeContent={analytics?.totalNotifications || 0} 
-                color="error"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    backgroundColor: '#ff4757',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '0.8rem',
-                    minWidth: '24px',
-                    height: '24px'
-                  }
-                }}
-              >
-                <Box
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    borderRadius: '50%',
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    animation: 'bellRing 2s ease-in-out infinite',
-                    '@keyframes bellRing': {
-                      '0%, 50%, 100%': { transform: 'rotate(0deg)' },
-                      '10%, 30%': { transform: 'rotate(-10deg)' },
-                      '20%, 40%': { transform: 'rotate(10deg)' }
-                    }
-                  }}
-                >
-                  <NotificationsActive sx={{ fontSize: 40, color: 'white' }} />
-                </Box>
-              </Badge>
-              
-              <Box>
-                <Typography variant="h4" component="h1" sx={{ 
-                  fontWeight: 'bold', 
-                  color: 'white',
-                  mb: 1,
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}>
-                  Notification Management Hub
-                </Typography>
-                <Typography variant="body1" sx={{ 
-                  color: 'rgba(255,255,255,0.9)',
-                  fontSize: '1.1rem'
-                }}>
-                Send real-time notifications • Track engagement • Manage campaigns
-                </Typography>
-                
-                {/* Live Stats */}
-                {analytics && (
-                  <Box display="flex" gap={3} sx={{ mt: 2 }}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Send sx={{ fontSize: 20 }} />
-                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                        {analytics.totalSent || 0} Sent
-                      </Typography>
-                    </Box>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <CheckCircle sx={{ fontSize: 20 }} />
-                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                        {analytics.totalDelivered || 0} Delivered
-                      </Typography>
-                    </Box>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <TrendingUp sx={{ fontSize: 20 }} />
-                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                        {analytics.averageOpenRate?.toFixed(1) || 0}% Open Rate
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            </Box>
-            
-            {/* Enhanced Action Buttons */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <Tooltip title="Refresh Notifications">
-                <IconButton 
-                  onClick={fetchNotifications}
-                  disabled={loading}
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    backdropFilter: 'blur(10px)',
-                    transform: loading ? 'rotate(360deg)' : 'rotate(0deg)',
-                    transition: 'all 0.6s ease',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.3)',
-                      transform: 'scale(1.1) rotate(180deg)',
-                    },
-                    '&:disabled': {
-                      backgroundColor: 'rgba(255,255,255,0.1)',
-                      animation: 'spin 1s linear infinite',
-                      '@keyframes spin': {
-                        '0%': { transform: 'rotate(0deg)' },
-                        '100%': { transform: 'rotate(360deg)' }
-                      }
-                    }
-                  }}
-                >
-                  <Refresh sx={{ fontSize: 24 }} />
-                </IconButton>
-              </Tooltip>
-              
-              <Tooltip title="Create New Notification">
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => setCreateDialogOpen(true)}
-                  sx={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    backdropFilter: 'blur(10px)',
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1.5,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.3)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
-                    }
-                  }}
-                >
-                  New Notification
-                </Button>
-              </Tooltip>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Enhanced Analytics Cards with Refresh Icons */}
+      <Box>
+                {/* Enhanced Analytics Cards with Refresh Icons */}
         {analytics ? (
           <Box sx={{ 
             display: 'grid', 
@@ -921,335 +767,118 @@ export default function NotificationsPage() {
             gap: 3, 
             mb: 4 
           }}>
-            <Box sx={{ position: 'relative' }}>
               <StatCard
                 title="Total Notifications"
                 value={analytics.totalNotifications?.toLocaleString() || '0'}
-                icon={<Notifications sx={{ fontSize: 48 }} />}
+                icon={<Notifications sx={{ fontSize: 38 }} />}
                 color="#667eea"
                 loading={loading}
+                
               />
-              <Tooltip title="Refresh Total Count">
-                <IconButton
-                  onClick={fetchNotifications}
-                  disabled={loading}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    color: '#667eea',
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                      transform: 'rotate(180deg)',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Refresh sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            
-            <Box sx={{ position: 'relative' }}>
+                          
               <StatCard
                 title="Sent Notifications"
                 value={analytics.totalSent?.toLocaleString() || '0'}
-                icon={<Send sx={{ fontSize: 48 }} />}
-                color="#4caf50"
+                icon={<Send sx={{ fontSize: 38 }} />}
+                
+            color="#764ba2"
                 loading={loading}
               />
-              <Tooltip title="Refresh Sent Count">
-                <IconButton
-                  onClick={fetchNotifications}
-                  disabled={loading}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                    color: '#4caf50',
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: 'rgba(76, 175, 80, 0.2)',
-                      transform: 'rotate(180deg)',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Refresh sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
+             
             
-            <Box sx={{ position: 'relative' }}>
               <StatCard
                 title="Delivered"
                 value={analytics.totalDelivered?.toLocaleString() || '0'}
-                icon={<CheckCircle sx={{ fontSize: 48 }} />}
-                color="#2196f3"
+                icon={<CheckCircle sx={{ fontSize: 38 }} />}
+                 color="#8B5CF6"
                 loading={loading}
               />
-              <Tooltip title="Refresh Delivery Stats">
-                <IconButton
-                  onClick={fetchNotifications}
-                  disabled={loading}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                    color: '#2196f3',
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: 'rgba(33, 150, 243, 0.2)',
-                      transform: 'rotate(180deg)',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Refresh sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            
-            <Box sx={{ position: 'relative' }}>
+             
               <StatCard
                 title="Average Open Rate"
                 value={`${analytics.averageOpenRate?.toFixed(1) || '0'}%`}
-                icon={<TrendingUp sx={{ fontSize: 48 }} />}
-                color="#ff9800"
+                icon={<TrendingUp sx={{ fontSize: 38 }} />}
+            color="#667eea"
                 loading={loading}
               />
-              <Tooltip title="Refresh Analytics">
-                <IconButton
-                  onClick={fetchNotifications}
-                  disabled={loading}
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    color: '#ff9800',
-                    width: 32,
-                    height: 32,
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 152, 0, 0.2)',
-                      transform: 'rotate(180deg)',
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <Refresh sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
+             
           </Box>
         ) : !loading && (
           <Box sx={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
             gap: 3, 
-            mb: 4 
+            mb: 3 
           }}>
             <StatCard
               title="Total Notifications"
               value="0"
-              icon={<Notifications sx={{ fontSize: 48 }} />}
+              icon={<Notifications sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={false}
             />
             <StatCard
               title="Sent Notifications"
               value="0"
-              icon={<Send sx={{ fontSize: 48 }} />}
-              color="#4caf50"
+              icon={<Send sx={{ fontSize: 38 }} />}
+              color="#764ba2"
               loading={false}
             />
             <StatCard
               title="Delivered"
               value="0"
-              icon={<CheckCircle sx={{ fontSize: 48 }} />}
-              color="#2196f3"
+              icon={<CheckCircle sx={{ fontSize: 38 }} />}
+              color="#8B5CF6"
               loading={false}
             />
             <StatCard
               title="Average Open Rate"
               value="0%"
-              icon={<TrendingUp sx={{ fontSize: 48 }} />}
-              color="#ff9800"
+              icon={<TrendingUp sx={{ fontSize: 38 }} />}
+              color="#667eea"
               loading={false}
             />
           </Box>
         )}
 
-        {/* Filters */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: 2, 
-              alignItems: 'center' 
-            }}>
-              <TextField
-                fullWidth
-                placeholder="Search notifications..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <FormControl fullWidth>
-                <InputLabel>Type</InputLabel>
-                <Select
-                  value={filters.type}
-                  label="Type"
-                  onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-                >
-                  <MenuItem value="">All Types</MenuItem>
-                  <MenuItem value="info">Info</MenuItem>
-                  <MenuItem value="success">Success</MenuItem>
-                  <MenuItem value="warning">Warning</MenuItem>
-                  <MenuItem value="error">Error</MenuItem>
-                  <MenuItem value="announcement">Announcement</MenuItem>
-                  <MenuItem value="emergency">Emergency</MenuItem>
-                  <MenuItem value="location">Location</MenuItem>
-                  <MenuItem value="system">System</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={filters.status}
-                  label="Status"
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                >
-                  <MenuItem value="">All Status</MenuItem>
-                  <MenuItem value="draft">Draft</MenuItem>
-                  <MenuItem value="sent">Sent</MenuItem>
-                  <MenuItem value="delivered">Delivered</MenuItem>
-                  <MenuItem value="read">Read</MenuItem>
-                  <MenuItem value="failed">Failed</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Priority</InputLabel>
-                <Select
-                  value={filters.priority}
-                  label="Priority"
-                  onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                >
-                  <MenuItem value="">All Priorities</MenuItem>
-                  <MenuItem value="low">Low</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="urgent">Urgent</MenuItem>
-                </Select>
-              </FormControl>
-              <Button
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={() => setFilters({
-                  type: '',
-                  status: '',
-                  priority: '',
-                  recipientType: '',
-                  search: '',
-                  sortBy: 'createdAt',
-                  sortOrder: 'desc'
-                })}
-                fullWidth
-              >
-                Clear Filters
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Refresh />}
-                onClick={fetchNotifications}
-                disabled={loading}
-                fullWidth
-                sx={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                  },
-                  '&:disabled': {
-                    background: '#e0e0e0',
-                  }
-                }}
-              >
-                {loading ? 'Refreshing...' : 'Refresh Data'}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
+   
+
+
 
         {/* Enhanced Notifications Table */}
-        <Card sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          {/* Quick Filter Bar */}
-          <Box sx={{ 
-            p: 2, 
-            backgroundColor: '#fafafa',
-            borderBottom: '1px solid #e0e0e0',
-            display: 'flex',
-            gap: 2,
-            alignItems: 'center',
-            flexWrap: 'wrap'
-          }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2c3e50', minWidth: 'fit-content' }}>
-            Quick Filters:
-            </Typography>
-            
-            <Chip
-              label="All"
-              onClick={() => setFilters(prev => ({ ...prev, status: '' }))}
-              color={filters.status === '' ? 'primary' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-            />
-            <Chip
-              label="Draft"
-              onClick={() => setFilters(prev => ({ ...prev, status: 'draft' }))}
-              color={filters.status === 'draft' ? 'primary' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-            />
-            <Chip
-              label="Sent"
-              onClick={() => setFilters(prev => ({ ...prev, status: 'sent' }))}
-              color={filters.status === 'sent' ? 'primary' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-            />
-            <Chip
-              label="High Priority"
-              onClick={() => setFilters(prev => ({ ...prev, priority: 'high' }))}
-              color={filters.priority === 'high' ? 'secondary' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-            />
-            <Chip
-              label="Emergency"
-              onClick={() => setFilters(prev => ({ ...prev, type: 'emergency' }))}
-              color={filters.type === 'emergency' ? 'error' : 'default'}
-              size="small"
-              sx={{ cursor: 'pointer' }}
-            />
-            
-            <Box sx={{ flexGrow: 1 }} />
-            
-            <Tooltip title="View Mode">
-              <IconButton
+        <Card>
+         <CardContent>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <Box display="flex" alignItems="center" gap={2}>
+   <IconButton
+      onClick={() => setShowFilters(prev => !prev)}
+                     sx={{
+                       backgroundColor: showSearchFilter ? '#e6efff' : '#f5f5f5',
+                       color: showSearchFilter ? '#667eea' : '#666',
+                       borderRadius: 1.5,
+                       width: 40,
+                       height: 40,
+                       '&:hover': {
+                         backgroundColor: '#e6efff',
+                         color: '#667eea',
+                         transform: 'scale(1.05)',
+                       },
+                       transition: 'all 0.2s ease',
+                     }}
+                   >
+                     <Filter width={20} height={20} />
+                   </IconButton>
+
+       <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
+                  Notifications
+                </Typography>
+  </Box>
+
+  <Box display="flex" alignItems="center" gap={2}>
+    <Tooltip title="View Mode">
+              
+              <Button
+               variant="outlined" 
                 size="small"
                 onClick={() => {
                   if (expandedRows.length === notifications.length) {
@@ -1258,50 +887,242 @@ export default function NotificationsPage() {
                     setExpandedRows(notifications.map(n => n._id));
                   }
                 }}
-                sx={{
-                  backgroundColor: expandedRows.length > 0 ? '#e3f2fd' : 'transparent',
-                  color: expandedRows.length > 0 ? '#1976d2' : 'inherit'
-                }}
+             sx={{
+                    borderColor: '#bdbdbd',
+                    color: '#ef4444',
+                    '&:hover': {
+                      borderColor: '#dc2626',
+                      backgroundColor: '#fef2f2',
+                      color: '#dc2626',
+                    },
+                  }}
               >
-                {expandedRows.length > 0 ? <VisibilityOutlined /> : <Visibility />}
-              </IconButton>
+                {expandedRows.length > 0 ? <VisibilityOutlined /> : <Visibility />} 
+              </Button>
+              
             </Tooltip>
-          </Box>
-          <Box sx={{ 
-            p: 3, 
-            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-            borderBottom: '1px solid #dee2e6'
-          }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50' }}>
-              Notifications Table
-              </Typography>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Typography variant="body2" color="text.secondary">
-                  {pagination.totalCount} total notifications
-                </Typography>
-                <Tooltip title="Refresh Table">
-                  <IconButton
-                    onClick={fetchNotifications}
-                    disabled={loading}
-                    sx={{
-                      backgroundColor: '#667eea',
-                      color: 'white',
-                      width: 36,
-                      height: 36,
-                      '&:hover': {
-                        backgroundColor: '#5a6fd8',
-                        transform: 'rotate(180deg)',
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <Refresh sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-          </Box>
+    <Button 
+    variant="outlined"
+    onClick={fetchNotifications}
+     startIcon={<Refresh />} 
+      sx={{
+                    borderColor: '#e0e0e0',
+                    color: '#666',
+                    '&:hover': {
+                      borderColor: '#bdbdbd',
+                      backgroundColor: '#f5f5f5',
+                    },
+                  }}>
+      Refresh
+    </Button>
+
+    <Button
+     variant="contained" 
+                       onClick={() => setCreateDialogOpen(true)}
+     startIcon={<Add />}
+      sx={{ 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                    },
+                  }}
+     >
+      New Notification
+    </Button>
+
+  </Box>
+</Box>
+<Collapse in={showFilters} timeout="auto" unmountOnExit>
+  <Paper sx={{ p: 2, mb: 2 }}>
+    <Box
+  sx={{
+    borderTop: '1px solid #e0e0e0',
+    pt: 2,
+    width: '100%',
+  }}
+>
+   <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: 'bold' }}>
+                    Filter Notifications
+                  </Typography>
+  <Box
+    sx={{
+      display: 'flex',
+      gap: 2,
+      width: '100%',
+    }}
+  >
+    {/* SEARCH */}
+    <TextField
+      placeholder="Search notifications"
+      value={filters.search}
+      onChange={(e) =>
+        setFilters(prev => ({ ...prev, search: e.target.value }))
+      }
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Search />
+          </InputAdornment>
+        ),
+      }}
+      sx={{
+        flex: 1, // 🔥 spread
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+          backgroundColor: 'white',
+        },
+      }}
+    />
+
+   <FormControl
+  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,            // ✅ border radius
+      backgroundColor: 'white',
+
+      '& fieldset': {
+        borderColor: '#ccc',      // normal
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea',   // ✅ blue hover
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',   // ✅ blue focus
+        borderWidth: 2,
+      },
+    },
+  }}
+>
+  <InputLabel>Type</InputLabel>
+  <Select
+    value={filters.type}
+    label="Type"
+    onChange={(e) =>
+      setFilters(prev => ({ ...prev, type: e.target.value }))
+    }
+  >
+    <MenuItem value="">All</MenuItem>
+    <MenuItem value="info">Info</MenuItem>
+    <MenuItem value="success">Success</MenuItem>
+    <MenuItem value="warning">Warning</MenuItem>
+    <MenuItem value="error">Error</MenuItem>
+  </Select>
+</FormControl>
+
+
+  <FormControl
+  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+      backgroundColor: 'white',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea',   // ✅ remove black, use blue
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }}
+>
+  <InputLabel>Status</InputLabel>
+  <Select
+    value={filters.status}
+    label="Status"
+    onChange={(e) =>
+      setFilters(prev => ({ ...prev, status: e.target.value }))
+    }
+  >
+    <MenuItem value="">All</MenuItem>
+    <MenuItem value="draft">Draft</MenuItem>
+    <MenuItem value="sent">Sent</MenuItem>
+    <MenuItem value="delivered">Delivered</MenuItem>
+  </Select>
+</FormControl>
+
+
+  </Box>
+
+  {/* ================= BOTTOM ROW : BUTTONS ================= */}
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'flex-end', // 🔥 right end
+      gap: 1.5,
+      mt: 2, // 🔥 space between fields & buttons
+    }}
+  >
+    <Button
+      variant="outlined"
+      startIcon={<RestartAlt />}
+      onClick={() => {
+        setFilters({
+          type: '',
+          status: '',
+          priority: '',
+          recipientType: '',
+          search: '',
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        });
+        // clear applied filters as well so data resets; keep panel open
+        setAppliedFilters({
+          type: '',
+          status: '',
+          priority: '',
+          recipientType: '',
+          search: '',
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        });
+      }}
+      sx={{
+        borderColor: '#667eea',
+        color: '#667eea',
+        '&:hover': {
+          borderColor: '#5a6fd8',
+          backgroundColor: '#667eea10',
+        },
+      }}
+    >
+      Reset
+    </Button>
+
+    <Button
+      variant="contained"
+      startIcon={<FilterList />}
+      onClick={() => {
+        // apply current UI filters and let effect fetch data
+        setAppliedFilters(filters);
+        // ensure page resets to 1 when applying new filters
+        setPagination(prev => ({ ...prev, page: 1 }));
+      }}
+      sx={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        '&:hover': {
+          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+        },
+      }}
+    >
+      Filter
+    </Button>
+  </Box>
+</Box>
+
+  </Paper>
+</Collapse>
+
+
 
           <TableContainer>
             <Table stickyHeader>
@@ -1858,18 +1679,44 @@ export default function NotificationsPage() {
               </TableBody>
             </Table>
           </TableContainer>
+        </CardContent>
         </Card>
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <Box display="flex" justifyContent="center" sx={{ mt: 3 }}>
-            <Pagination
-              count={pagination.totalPages}
-              page={pagination.page}
-              onChange={(_, page) => setPagination(prev => ({ ...prev, page }))}
-              color="primary"
-              size="large"
-            />
+         <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+               <Pagination
+       count={pagination.totalPages}
+                  page={pagination.page}
+                  onChange={(_, page) => handlePageChange(page)}
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
           </Box>
         )}
 
@@ -1892,6 +1739,7 @@ export default function NotificationsPage() {
               gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
               gap: 2, 
               mt: 1 
+              
             }}>
               <TextField
                 fullWidth

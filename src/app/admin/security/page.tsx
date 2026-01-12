@@ -22,6 +22,8 @@ import {
   Skeleton,
   Tooltip,
   Button,
+  Pagination,
+ PaginationItem,
 } from '@mui/material';
 import {
   Search,
@@ -97,6 +99,8 @@ export default function SecurityPage() {
   const [nameFilter, setNameFilter] = useState('');
   const [emailFilter, setEmailFilter] = useState('');
   const [phoneFilter, setPhoneFilter] = useState('');
+  // Applied filters - only used when user clicks Filter
+  const [appliedFilters, setAppliedFilters] = useState<{ name: string; email: string; phone: string }>({ name: '', email: '', phone: '' });
 
   const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
 
@@ -126,17 +130,18 @@ export default function SecurityPage() {
   
   // Filter functions
   const handleApplyFilters = () => {
-    // Apply filters logic here
-    // You can add actual filtering logic here
-    showNotification('Filters applied successfully!', 'success');
+    // Apply current UI filter values into appliedFilters
+    setAppliedFilters({ name: nameFilter, email: emailFilter, phone: phoneFilter });
+    setPage(1);
   };
 
   const handleResetFilters = () => {
     setNameFilter('');
     setEmailFilter('');
     setPhoneFilter('');
-    setShowSearchFilter(false);
-    showNotification('Filters reset successfully!', 'info');
+    // Clear applied filters but keep panel open
+    setAppliedFilters({ name: '', email: '', phone: '' });
+    setPage(1);
   };
   
   // Statistics state
@@ -265,21 +270,41 @@ export default function SecurityPage() {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesName = nameFilter === '' || 
-      user.name.toLowerCase().includes(nameFilter.toLowerCase());
+    const matchesName = appliedFilters.name === '' || 
+      user.name.toLowerCase().includes(appliedFilters.name.toLowerCase());
 
-    const matchesEmail = emailFilter === '' ||
-      user.email.toLowerCase().includes(emailFilter.toLowerCase());
+    const matchesEmail = appliedFilters.email === '' ||
+      user.email.toLowerCase().includes(appliedFilters.email.toLowerCase());
 
-    const matchesPhone = phoneFilter === '' ||
-      user.phone.includes(phoneFilter);
+    const matchesPhone = appliedFilters.phone === '' ||
+      user.phone.includes(appliedFilters.phone);
 
     return matchesName && matchesEmail && matchesPhone;
   });
 
+
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+
+const paginatedUsers = filteredUsers.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+useEffect(() => {
+  setPage(1);
+}, [appliedFilters]);
+
+
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box>
         {/* Statistics Cards */}
         <Box sx={{ mb: 4 }}>
     
@@ -292,28 +317,28 @@ export default function SecurityPage() {
             <StatCard
               title="Total Users"
               value={stats.totalUsers}
-              icon={<Group sx={{ fontSize: 30 }} />}
+              icon={<Group sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
             <StatCard
               title="Active Users"
               value={stats.activeUsers}
-              icon={<Person sx={{ fontSize: 30 }} />}
+              icon={<Person sx={{ fontSize: 38 }} />}
               color="#764ba2"
               loading={statsLoading}
             />
             <StatCard
               title="Recent Registrations"
               value={stats.recentRegistrations}
-              icon={<TrendingUp sx={{ fontSize: 30 }} />}
+              icon={<TrendingUp sx={{ fontSize: 38 }} />}
               color="#8B5CF6"
               loading={statsLoading}
             />
             <StatCard
               title="Encrypted Passwords"
               value={stats.encryptedPasswords}
-              icon={<Shield sx={{ fontSize: 30 }} />}
+              icon={<Shield sx={{ fontSize: 38 }} />}
               color="#667eea"
               loading={statsLoading}
             />
@@ -344,30 +369,37 @@ export default function SecurityPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151', display: 'flex', alignItems: 'center', gap: 1 }}>
+             <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                   Security 
                 </Typography>
               </Box>
               
               <Box display="flex" alignItems="center" gap={2}>
-                <IconButton
-                  onClick={fetchUsers}
-                  sx={{
-                    backgroundColor: '#f5f5f5',
-                    color: '#666',
-                    borderRadius: 1.5,
-                    width: 40,
-                    height: 40,
-                    '&:hover': {
-                      backgroundColor: '#e3f2fd',
-                      color: '#1976d2',
-                      transform: 'scale(1.05)',
-                    },
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <Refresh />
-                </IconButton>
+                
+                                                <Tooltip title="Refresh Songs List">
+                                                  <Button 
+                                                    variant="outlined" 
+                                                     onClick={fetchUsers}
+                                                    disabled={loading}
+                                                    sx={{
+                                                      borderColor: '#e0e0e0',
+                                                      color: '#666',
+                                                      borderRadius: 2,
+                                                      minWidth: 120,
+                                                      '&:hover': {
+                                                        borderColor: '#667eea',
+                                                        backgroundColor: '#667eea15',
+                                                        color: '#667eea',
+                                                      },
+                                                      '&:disabled': {
+                                                        opacity: 0.6,
+                                                      },
+                                                    }}
+                                                    startIcon={loading ? <CircularProgress size={16} /> : <Refresh />}
+                                                  >
+                                                    Refresh
+                                                  </Button>
+                                                </Tooltip>
               </Box>
             </Box>
 
@@ -379,7 +411,7 @@ export default function SecurityPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter User Data
                 </Typography>
                 
@@ -476,20 +508,15 @@ export default function SecurityPage() {
                     variant="outlined"
                     startIcon={<RestartAlt />}
                     onClick={handleResetFilters}
-                    sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        borderColor: '#764ba2',
-                        backgroundColor: '#667eea10',
-                        color: '#764ba2',
-                      },
-                    }}
+                   sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
                   >
                     Reset
                   </Button>
@@ -499,19 +526,11 @@ export default function SecurityPage() {
                     startIcon={<FilterList />}
                     onClick={handleApplyFilters}
                     sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                        boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                      },
-                    }}
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }} 
                   >
                     Filter
                   </Button>
@@ -561,7 +580,7 @@ export default function SecurityPage() {
                     </TableRow>
                   ) : (
                     // Show actual data when loaded
-                    filteredUsers.map((user, index) => (
+                    paginatedUsers.map((user, index) => (
                       <TableRow key={user._id} sx={{ '&:hover': { backgroundColor: '#f9fafb' } }}>
                         <TableCell align="center" sx={{ py: 2 }}>
                           <Typography 
@@ -572,7 +591,7 @@ export default function SecurityPage() {
                               fontSize: '0.875rem'
                             }}
                           >
-                            {index + 1}
+                           {(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ py: 2 }}>
@@ -753,6 +772,43 @@ export default function SecurityPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+                                                  {/* Pagination */}
+                       {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  size="large"
+                  renderItem={(item) => (
+                    <PaginationItem
+                      {...item}
+                       sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+                    />
+                  )}
+                />
+              </Box>
+            )}
           </CardContent>
         </Card>
 

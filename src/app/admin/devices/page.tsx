@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Filter } from 'iconoir-react';
+import { Pagination, PaginationItem } from '@mui/material';
+import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -49,7 +52,8 @@ import {
   CheckCircle,
   Cancel,
   PictureAsPdf,
-  OpenInNew
+  OpenInNew,
+  RestartAlt,
 } from '@mui/icons-material';
 import { notifications } from '@mantine/notifications';
 
@@ -147,14 +151,27 @@ export default function DevicesPage() {
     averageSessions: 0,
     recentInstalls: 0
   });
+
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 0,
     totalCount: 0,
     hasNextPage: false,
-    hasPrevPage: false
+    hasPrevPage: false,
   });
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const [filters, setFilters] = useState({
+    search: '',
+    platform: '',
+    installationSource: '',
+    isActive: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
+  // Local temp filters so typing doesn't trigger fetch until user clicks Filter
+  const [tempFilters, setTempFilters] = useState({
     search: '',
     platform: '',
     installationSource: '',
@@ -164,8 +181,7 @@ export default function DevicesPage() {
   });
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+
   const [showFilters, setShowFilters] = useState(false);
   const [showLoadingAnimation, setShowLoadingAnimation] = useState(true);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -195,20 +211,19 @@ export default function DevicesPage() {
 
   const fetchDevices = useCallback(async () => {
     try {
-       setShowLoadingAnimation(true);
       setLoading(true);
-      const queryParams = new URLSearchParams({
-        page: (page + 1).toString(),
-        limit: rowsPerPage.toString(),
-        search: filters.search,
-        platform: filters.platform,
-        installationSource: filters.installationSource,
-        isActive: filters.isActive,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
-      });
+      const params = new URLSearchParams();
+      params.set('page', (page + 1).toString());
+      params.set('limit', rowsPerPage.toString());
+      if (filters.search) params.set('search', filters.search);
+      if (filters.platform) params.set('platform', filters.platform);
+      if (filters.installationSource) params.set('installationSource', filters.installationSource);
+      if (filters.isActive) params.set('isActive', filters.isActive);
+      if (filters.sortBy) params.set('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
 
-      const response = await fetch(`/api/admin/devices?${queryParams}`, {
+      console.debug('Fetching devices with params:', params.toString());
+      const response = await fetch(`/api/admin/devices?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -232,10 +247,54 @@ export default function DevicesPage() {
       console.error('Fetch devices error:', error);
       showNotification(error.message || 'Failed to fetch devices', 'error');
     } finally {
-       setShowLoadingAnimation(false);
       setLoading(false);
     }
   }, [page, rowsPerPage, filters]);
+
+
+  // Immediate fetch helper that accepts filters and page overrides
+  const fetchDevicesWith = useCallback(async (useFilters: typeof filters, usePage: number) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.set('page', (usePage + 1).toString());
+      params.set('limit', rowsPerPage.toString());
+      if (useFilters.search) params.set('search', useFilters.search);
+      if (useFilters.platform) params.set('platform', useFilters.platform);
+      if (useFilters.installationSource) params.set('installationSource', useFilters.installationSource);
+      if (useFilters.isActive) params.set('isActive', useFilters.isActive);
+      if (useFilters.sortBy) params.set('sortBy', useFilters.sortBy);
+      if (useFilters.sortOrder) params.set('sortOrder', useFilters.sortOrder);
+
+      console.debug('Immediate fetch devices with params:', params.toString());
+
+      const response = await fetch(`/api/admin/devices?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: DevicesResponse = await response.json();
+
+      if (data.success) {
+        setDevices(data.data.devices);
+        setPagination(data.data.pagination);
+        setAnalytics(data.data.analytics);
+      } else {
+        throw new Error(data.error || 'Failed to fetch devices');
+      }
+    } catch (error: any) {
+      console.error('Fetch devices error:', error);
+      showNotification(error.message || 'Failed to fetch devices', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [rowsPerPage]);
 
   useEffect(() => {
     fetchDevices();
@@ -249,10 +308,10 @@ export default function DevicesPage() {
       return () => clearTimeout(timer);
     }, []);
 
-  const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-    setPage(0);
-  };
+const handleFilterChange = (field: string, value: string) => {
+  setTempFilters(prev => ({ ...prev, [field]: value }));
+};
+
 
   const handlePageChange = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -344,6 +403,23 @@ export default function DevicesPage() {
     }
   };
 
+  const formatDate = (dateString: string | Date | undefined): string => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'N/A';
+    }
+  };
+
   const getSourceChip = (device: Device) => {
     const getSourceIcon = () => {
       switch (device.installationSource) {
@@ -372,6 +448,9 @@ export default function DevicesPage() {
       setMenuAnchor(e.currentTarget);
       setSelectedDeviceForMenu(device);
     };
+
+// removed local handlers to avoid shadowing component handlers
+
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -743,6 +822,32 @@ export default function DevicesPage() {
     }
   };
 
+    const [showSearchFilter, setShowSearchFilter] = useState(false);
+  
+
+  function handleApplyFilters(event?: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    event?.preventDefault();
+    // apply tempFilters to filters; effect will fetch
+    console.debug('Applying filters:', tempFilters);
+    setFilters({ ...tempFilters });
+    // also trigger an immediate fetch to avoid timing issues
+    fetchDevicesWith({ ...tempFilters }, 0).catch(() => {});
+  }
+
+  function handleResetFilters(event?: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    event?.preventDefault();
+    const cleared = {
+      search: '',
+      platform: '',
+      installationSource: '',
+      isActive: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    };
+    setTempFilters(cleared);
+    setFilters(cleared);
+  }
+
   return (
     <AdminLayout>
       <Box>
@@ -854,7 +959,7 @@ export default function DevicesPage() {
                   </Typography>
                 </Box>
                 <Box sx={{ color: '#667eea', opacity: 0.8 }}>
-                  <PhoneAndroid sx={{ fontSize: 20 }} />
+                  <PhoneAndroid sx={{ fontSize: 38 }} />
                 </Box>
               </Box>
             </CardContent>
@@ -884,7 +989,7 @@ export default function DevicesPage() {
                   </Typography>
                 </Box>
                 <Box sx={{ color: '#667eea', opacity: 0.8 }}>
-                  <Visibility sx={{ fontSize: 20 }} />
+                  <Visibility sx={{ fontSize: 38 }} />
                 </Box>
               </Box>
             </CardContent>
@@ -914,7 +1019,7 @@ export default function DevicesPage() {
                   </Typography>
                 </Box>
                 <Box sx={{ color: '#2196F3', opacity: 0.8 }}>
-                  <Android sx={{ fontSize: 20 }} />
+                  <Android sx={{ fontSize: 38 }} />
                 </Box>
               </Box>
             </CardContent>
@@ -944,7 +1049,7 @@ export default function DevicesPage() {
                   </Typography>
                 </Box>
                 <Box sx={{ color: '#667eea', opacity: 0.8 }}>
-                  <Apple sx={{ fontSize: 20 }} />
+                  <Apple sx={{ fontSize: 38 }} />
                 </Box>
               </Box>
             </CardContent>
@@ -952,31 +1057,30 @@ export default function DevicesPage() {
         </Box>
 
       {/* Devices Table */}
-      <Card sx={{ borderRadius: '16px' }}>
-        {/* Header with Title and Action Buttons */}
-        <Box sx={{ 
-          p: 4, 
-          borderBottom: '1px solid #dee2e6',
-          borderRadius: '16px 16px 0 0',
-          color: 'black'
-        }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Tooltip title="Toggle Filters">
-                <IconButton
+      <Card>
+      <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <Box display="flex" alignItems="center" gap={2}>
+               <IconButton
                   onClick={() => setShowFilters(!showFilters)}
-                  sx={{
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    color: '#667eea',
-                    '&:hover': {
-                      backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                    }
-                  }}
-                >
-                  <FilterList />
-                </IconButton>
-              </Tooltip>
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#374151' }}>
+                                 sx={{
+                                   backgroundColor: showSearchFilter ? '#667eea15' : '#f5f5f5',
+                                   color: showSearchFilter ? '#667eea' : '#666',
+                                   borderRadius: 1.5,
+                                   width: 40,
+                                   height: 40,
+                                   '&:hover': {
+                                     backgroundColor: '#667eea15',
+                                     color: '#667eea',
+                                     transform: 'scale(1.05)',
+                                   },
+                                   transition: 'all 0.2s ease',
+                                 }}
+                               >
+                                 <Filter width={20} height={20} />
+                               </IconButton>
+            
+             <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
               Device Management
               </Typography>
             </Box>
@@ -999,101 +1103,177 @@ export default function DevicesPage() {
                              </Button>
             </Box>
           </Box>
-        </Box>
 
         {/* Filters inside the table card */}
         <Collapse in={showFilters} timeout="auto" unmountOnExit>
-          <Box sx={{ p: 3, backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <FilterList sx={{ color: '#667eea' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#667eea' }}>
-                  Search & Filters
-                </Typography>
-              </Box>
-              <Tooltip title="Hide Filters">
-                <IconButton
-                  onClick={() => setShowFilters(false)}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    color: '#667eea',
-                    '&:hover': {
-                      backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                    }
-                  }}
-                >
-                  <ExpandLess />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            <Box sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-              gap: 2
-            }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Search devices..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Search /></InputAdornment>
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#667eea',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#667eea',
-                    },
-                  }
-                }}
-              />
-              <FormControl fullWidth size="small">
-                <InputLabel sx={{ '&.Mui-focused': { color: '#667eea' } }}>Platform</InputLabel>
-                <Select
-                  value={filters.platform}
-                  label="Platform"
-                  onChange={(e) => handleFilterChange('platform', e.target.value)}
-                  sx={{
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#667eea',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#667eea',
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Platforms</MenuItem>
-                  <MenuItem value="android">Android</MenuItem>
-                  <MenuItem value="ios">iOS</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth size="small">
-                <InputLabel sx={{ '&.Mui-focused': { color: '#667eea' } }}>Status</InputLabel>
-                <Select
-                  value={filters.isActive}
-                  label="Status"
-                  onChange={(e) => handleFilterChange('isActive', e.target.value)}
-                  sx={{
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#667eea',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#667eea',
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Status</MenuItem>
-                  <MenuItem value="true">Active</MenuItem>
-                  <MenuItem value="false">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
+            <Box
+  mb={3}
+  sx={{
+    backgroundColor: '#f8fafc',
+    borderRadius: 2,
+    p: 3,
+    border: '1px solid #e2e8f0',
+  }}
+>
+  {/* HEADER */}
+  <Typography
+    variant="h6"
+    sx={{ mb: 2, color: '#7353ae', fontWeight: 'bold' }}
+  >
+    Filter Devices
+  </Typography>
+
+  {/* ================= TOP ROW : FIELDS ================= */}
+  <Box
+    sx={{
+      display: 'flex',
+      gap: 2,
+      width: '100%',
+    }}
+  >
+    {/* SEARCH */}
+    <TextField
+      fullWidth
+      placeholder="Search devices..."
+      value={tempFilters.search}
+      onChange={(e) => handleFilterChange('search', e.target.value)}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Search />
+          </InputAdornment>
+        ),
+      }}
+      sx={{
+        flex: 1,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+          backgroundColor: '#fff',
+
+          '& fieldset': {
+            borderColor: '#cbd5e1',
+          },
+          '&:hover fieldset': {
+            borderColor: '#667eea',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#667eea',
+            borderWidth: 2,
+          },
+        },
+      }}
+    />
+
+    {/* PLATFORM */}
+    <FormControl
+      sx={{
+        flex: 1,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+          backgroundColor: '#fff',
+
+          '& fieldset': {
+            borderColor: '#cbd5e1',
+          },
+          '&:hover fieldset': {
+            borderColor: '#667eea',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#667eea',
+            borderWidth: 2,
+          },
+        },
+      }}
+    >
+      <InputLabel>Platform</InputLabel>
+      <Select
+        value={tempFilters.platform}
+        label="Platform"
+        onChange={(e) => handleFilterChange('platform', e.target.value)}
+      >
+        <MenuItem value="">All</MenuItem>
+        <MenuItem value="android">Android</MenuItem>
+        <MenuItem value="ios">iOS</MenuItem>
+      </Select>
+    </FormControl>
+
+    {/* STATUS */}
+    <FormControl
+      sx={{
+        flex: 1,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+          backgroundColor: '#fff',
+
+          '& fieldset': {
+            borderColor: '#cbd5e1',
+          },
+          '&:hover fieldset': {
+            borderColor: '#667eea',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#667eea',
+            borderWidth: 2,
+          },
+        },
+      }}
+    >
+      <InputLabel>Status</InputLabel>
+      <Select
+        value={tempFilters.isActive}
+        label="Status"
+        onChange={(e) => handleFilterChange('isActive', e.target.value)}
+      >
+        <MenuItem value="">All</MenuItem>
+        <MenuItem value="true">Active</MenuItem>
+        <MenuItem value="false">Inactive</MenuItem>
+      </Select>
+    </FormControl>
+  </Box>
+
+  {/* ================= BOTTOM ROW : BUTTONS ================= */}
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: 1.5,
+      mt: 3,
+    }}
+  >
+    <Button
+      variant="outlined"
+      onClick={handleResetFilters}
+      startIcon={<RestartAlt />}
+      sx={{
+        height: 40,
+        borderColor: '#667eea',
+        color: '#667eea',
+        '&:hover': {
+          borderColor: '#5a6fd8',
+          backgroundColor: '#667eea10',
+        },
+      }}
+    >
+      Reset
+    </Button>
+
+    <Button
+      variant="contained"
+      onClick={handleApplyFilters}
+      startIcon={<FilterList />}
+      sx={{
+        height: 40,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        '&:hover': {
+          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+        },
+      }}
+    >
+      Filter
+    </Button>
+  </Box>
+</Box>
+
         </Collapse>
         <TableContainer>
           <Table>
@@ -1190,9 +1370,10 @@ export default function DevicesPage() {
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
-                        {new Date(device.lastActiveDate).toLocaleDateString()}
-                      </Typography>
+                     <Typography variant="body2">
+  {formatDate(device.lastActiveDate ?? device.updatedAt)}
+</Typography>
+
                     </TableCell>
                     <TableCell>
                       <IconButton
@@ -1207,18 +1388,56 @@ export default function DevicesPage() {
                 ))
               )}
             </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={pagination.totalCount}
-          page={page}
-          onPageChange={handlePageChange}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleRowsPerPageChange}
-          rowsPerPageOptions={[10, 20, 50]}
-        />
-      </Card>
+            </Table>
+          </TableContainer>
+
+          <Box
+  sx={{
+    display: 'flex',
+    justifyContent: 'center',
+    mt: 3,
+  }}
+>
+  <Pagination
+    page={page + 1}
+    count={pagination.totalPages}
+    onChange={(_, value) => setPage(value - 1)}
+    shape="rounded"
+    renderItem={(item) => (
+      <PaginationItem
+        {...item}
+        slots={{
+          previous: ChevronLeft,
+          next: ChevronRight,
+        }}
+       sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+      />
+    )}
+  />
+</Box>
+
+        </CardContent>
+         </Card>
 
       {/* Device Details Dialog */}
       <Dialog

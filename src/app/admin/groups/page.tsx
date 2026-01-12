@@ -34,7 +34,8 @@ import {
   MenuItem,
   Tooltip,
   ButtonGroup,
-
+  Pagination,
+PaginationItem,
   Alert,
 } from '@mui/material';
 import {
@@ -478,14 +479,12 @@ export default function GroupsPage() {
     // This function can be used to trigger any additional filter logic if needed
     // For now, the filtering is reactive, so this just refreshes the data
     fetchGroups();
-    showNotification('Filters applied successfully!', 'success');
   };
 
   const handleResetFilters = () => {
     setNameFilter('');
     setCreatorFilter('');
     setDescriptionFilter('');
-    showNotification('Filters reset successfully!', 'info');
   };
 
   const clearAllFilters = () => {
@@ -522,11 +521,27 @@ export default function GroupsPage() {
     }
   };
 
+const [page, setPage] = useState(1);
+const rowsPerPage = 10; 
+
+const totalPages = Math.ceil(filteredGroups.length / rowsPerPage);
+const paginatedGroups = filteredGroups.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+useEffect(() => {
+  setPage(1);
+}, [nameFilter, creatorFilter, descriptionFilter]);
 
 
   return (
     <AdminLayout>
-      <Box sx={{ p: 3 }}>
+      <Box>
         {/* Loading Animation Overlay */}
         {showLoadingAnimation && (
           <Box
@@ -617,25 +632,25 @@ export default function GroupsPage() {
           <StatCard
             title="Total Groups"
             value={stats.total}
-            icon={<GroupIcon sx={{ fontSize: 20 }} />}
+            icon={<GroupIcon sx={{ fontSize: 38 }} />}
             color="#667eea"
           />
           <StatCard
             title="Active Groups"
             value={stats.active}
-            icon={<CheckCircle sx={{ fontSize: 20 }} />}
+            icon={<CheckCircle sx={{ fontSize: 38 }} />}
             color="#764ba2"
           />
           <StatCard
             title="Journey Status"
             value={stats.inProgress}
-            icon={<DirectionsWalk sx={{ fontSize: 20 }} />}
+            icon={<DirectionsWalk sx={{ fontSize: 38 }} />}
             color="#8B5CF6"
           />
           <StatCard
             title="Total Members"
             value={stats.totalMembers}
-            icon={<TrendingUp sx={{ fontSize: 20 }} />}
+            icon={<TrendingUp sx={{ fontSize: 38 }} />}
             color="#667eea"
           />
         </Box>
@@ -664,7 +679,7 @@ export default function GroupsPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                   Groups 
                 </Typography>
               </Box>
@@ -709,7 +724,7 @@ export default function GroupsPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: 'bold' }}>
                   Filter Groups
                 </Typography>
                 
@@ -718,7 +733,7 @@ export default function GroupsPage() {
                   <TextField
                     fullWidth
                     label="Group Name"
-                    placeholder="Enter group name..."
+                    placeholder="Enter group name"
                     value={nameFilter}
                     onChange={(e) => setNameFilter(e.target.value)}
                     InputProps={{
@@ -746,7 +761,7 @@ export default function GroupsPage() {
                   <TextField
                     fullWidth
                     label="Description"
-                    placeholder="Enter description..."
+                    placeholder="Enter description"
                     value={descriptionFilter}
                     onChange={(e) => setDescriptionFilter(e.target.value)}
                     InputProps={{
@@ -774,7 +789,7 @@ export default function GroupsPage() {
                   <TextField
                     fullWidth
                     label="Creator"
-                    placeholder="Enter creator name or email..."
+                    placeholder="Enter creator name or email"
                     value={creatorFilter}
                     onChange={(e) => setCreatorFilter(e.target.value)}
                     InputProps={{
@@ -801,11 +816,26 @@ export default function GroupsPage() {
                 </Box>
 
                 {/* Action Buttons */}
-                <Box display="flex" justifyContent="flex-end" alignItems="center">
-                  <Box display="flex" gap={2}>
+                <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+                     <Button
+                      variant="outlined"
+                      onClick={handleResetFilters}
+                      startIcon={<RestartAlt />}
+                     sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
+                    >
+                      Reset
+                    </Button>
+
                     <Button
                       variant="contained"
-                      size="small"
                       onClick={handleApplyFilters}
                       startIcon={<FilterList />}
                       sx={{
@@ -813,34 +843,12 @@ export default function GroupsPage() {
                         '&:hover': {
                           background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
                         },
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                      }}
-                    >
+                      }}     
+                        >
                       Filter
                     </Button>
                     
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleResetFilters}
-                      startIcon={<RestartAlt />}
-                      sx={{
-                        borderColor: '#667eea',
-                        color: '#667eea',
-                        '&:hover': {
-                          borderColor: '#5a6fd8',
-                          backgroundColor: '#667eea15',
-                        },
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  </Box>
+                  
                 </Box>
               </Box>
             )}
@@ -895,7 +903,7 @@ export default function GroupsPage() {
                     </TableRow>
                   ) : (
                     // Show actual data when loaded
-                    filteredGroups.map((group, index) => (
+paginatedGroups.map((group, index) => (
                       <TableRow key={group._id} sx={{ '&:hover': { backgroundColor: '#f9fafb' } }}>
                         <TableCell align="center" sx={{ py: 2 }}>
                           <Typography 
@@ -906,7 +914,7 @@ export default function GroupsPage() {
                               fontSize: '0.875rem'
                             }}
                           >
-                            {index + 1}
+{(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ py: 2 }}>
@@ -1061,6 +1069,44 @@ export default function GroupsPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+              {/* Pagination */}
+                      {totalPages > 1 && (
+  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+    <Pagination
+      count={totalPages}
+      page={page}
+      onChange={handlePageChange}
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
+  </Box>
+)}
+
           </CardContent>
         </Card>
 

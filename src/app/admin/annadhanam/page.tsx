@@ -36,6 +36,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
+  Pagination,
+  PaginationItem,
 } from '@mui/material';
 import {
   Add,
@@ -273,7 +275,7 @@ export default function AnnadhanamPage() {
 
   const handleApplyFilters = () => {
     // Filters are applied automatically through filteredAnnadhanamList
-    showNotification('Filters applied successfully!', 'success');
+    // showNotification('Filters applied successfully!', 'success');
   };
 
   const handleResetFilters = () => {
@@ -281,7 +283,6 @@ export default function AnnadhanamPage() {
     setLocationFilter('');
     setFoodTypeFilter('all');
     setStatusFilter('all');
-    showNotification('Filters reset successfully!', 'info');
   };
 
   const fetchAnnadhanamList = async () => {
@@ -511,6 +512,24 @@ export default function AnnadhanamPage() {
     if (lat === 0 && lng === 0) return '';
     return `https://www.google.com/maps?q=${lat},${lng}`;
   };
+const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(filteredAnnadhanamList.length / rowsPerPage);
+
+const paginatedAnnadhanamList = filteredAnnadhanamList.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+useEffect(() => {
+  setPage(1);
+}, [nameFilter, locationFilter, foodTypeFilter, statusFilter]);
+
 
   return (
     <AdminLayout>
@@ -615,28 +634,28 @@ export default function AnnadhanamPage() {
           <StatCard
             title="Total Annadhanam"
             value={stats.total}
-            icon={<RestaurantMenu sx={{ fontSize: 20 }} />}
+            icon={<RestaurantMenu sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
           <StatCard
             title="Active Centers"
             value={stats.active}
-            icon={<CheckCircle sx={{ fontSize: 20 }} />}
+            icon={<CheckCircle sx={{ fontSize: 38 }} />}
             color="#764ba2"
             loading={statsLoading}
           />
           <StatCard
             title="Currently Available"
             value={stats.available}
-            icon={<Restaurant sx={{ fontSize: 20 }} />}
+            icon={<Restaurant sx={{ fontSize: 38 }} />}
             color="#8B5CF6"
             loading={statsLoading}
           />
           <StatCard
             title="Total Capacity"
             value={stats.totalCapacity}
-            icon={<People sx={{ fontSize: 20 }} />}
+            icon={<People sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
@@ -666,7 +685,7 @@ export default function AnnadhanamPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                 Annadhanam
                 </Typography>
               </Box>
@@ -712,153 +731,182 @@ export default function AnnadhanamPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter Annadhanam
                 </Typography>
                 
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr) 80px 80px' }, 
-                  gap: 2, 
-                  mb: 2 
-                }}>
-                  <TextField
-                    fullWidth
-                    label="Name"
-                    placeholder="Enter annadhanam name..."
-                    value={nameFilter}
-                    onChange={(e) => setNameFilter(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Restaurant color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
+                <Box mb={2}>
+  {/* 🔹 Filters Row */}
+  <Box
+    display="flex"
+    gap={2}
+    alignItems="center"
+    flexWrap="nowrap"
+  >
+    <TextField
+      label="Name"
+      placeholder="Enter annadhanam name..."
+      value={nameFilter}
+      onChange={(e) => setNameFilter(e.target.value)}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Restaurant color="action" />
+          </InputAdornment>
+        ),
+      }}
+     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
                         backgroundColor: 'white',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          '& fieldset': {
-                            borderColor: '#667eea',
-                            borderWidth: 2,
-                          },
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)',
+                        '&:hover fieldset': {
+                          borderColor: '#667eea',
                         },
-                        '&.Mui-focused': {
-                          '& fieldset': {
-                            borderColor: '#667eea',
-                            borderWidth: 2,
-                          },
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#667eea',
+                          borderWidth: 2,
                         },
                       },
                     }}
-                  />
-                  
-                  <TextField
-                    fullWidth
-                    label="Location"
-                    placeholder="Enter location..."
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocationOn color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
+    />
+
+    <TextField
+      label="Location"
+      placeholder="Enter location..."
+      value={locationFilter}
+      onChange={(e) => setLocationFilter(e.target.value)}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <LocationOn color="action" />
+          </InputAdornment>
+        ),
+      }}
+       sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
                         backgroundColor: 'white',
-                        transition: 'all 0.3s ease',
+                        '&:hover fieldset': {
+                          borderColor: '#667eea',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#667eea',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+    />
+
+ <FormControl
+  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#ffffff',
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea', 
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }}
+>
+  <InputLabel>Food Type</InputLabel>
+  <Select
+    value={foodTypeFilter}
+    label="Food Type"
+    onChange={(e) => setFoodTypeFilter(e.target.value)}
+  >
+    <MenuItem value="all">All Types</MenuItem>
+    {foodTypes.map((type) => (
+      <MenuItem key={type.value} value={type.value}>
+        {type.label}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+
+    <FormControl
+  sx={{
+    flex: 1,
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+       backgroundColor: '#ffffff', 
+
+      
+
+      '& fieldset': {
+        borderColor: '#ccc',
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#667eea',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    },
+  }}
+>
+  <InputLabel>Status</InputLabel>
+  <Select
+    value={statusFilter}
+    label="Status"
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <MenuItem value="all">All Status</MenuItem>
+    <MenuItem value="active">Active</MenuItem>
+    <MenuItem value="inactive">Inactive</MenuItem>
+  </Select>
+</FormControl>
+
+  </Box>
+   <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} sx={{ mt: 2 }}>
+
+    <Button
+      variant="outlined"
+      onClick={handleResetFilters}
+      startIcon={<RestartAlt />}
+      sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
                         '&:hover': {
-                          '& fieldset': {
-                            borderColor: '#667eea',
-                            borderWidth: 2,
-                          },
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)',
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
                         },
-                        '&.Mui-focused': {
-                          '& fieldset': {
-                            borderColor: '#667eea',
-                            borderWidth: 2,
-                          },
-                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.2)',
+                      }}
+    >
+      Reset
+    </Button>
+
+     <Button
+      variant="contained"
+      onClick={handleApplyFilters}
+      startIcon={<FilterList />}
+      sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
                         },
-                      },
-                    }}
-                  />
+                      }} 
+    >
+      Filter
+    </Button>
+  </Box>
+</Box>
 
-                  <FormControl fullWidth>
-                    <InputLabel>Food Type</InputLabel>
-                    <Select
-                      value={foodTypeFilter}
-                      label="Food Type"
-                      onChange={(e) => setFoodTypeFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Types</MenuItem>
-                      {foodTypes.map((type) => (
-                        <MenuItem key={type.value} value={type.value}>
-                          {type.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-<FormControl fullWidth>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={statusFilter}
-                      label="Status"
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                      <MenuItem value="all">All Status</MenuItem>
-                      <MenuItem value="active">Active</MenuItem>
-                      <MenuItem value="inactive">Inactive</MenuItem>
-                    </Select>
-                  </FormControl>
-                <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleApplyFilters}
-                    startIcon={<FilterList />}
-                    sx={{ 
-                      height: '40px',
-                      minWidth: '80px',
-                      marginTop:"15px",
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                      },
-                    }}
-                  >
-                    Filter
-                  </Button>
-
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={handleResetFilters}
-                    startIcon={<RestartAlt />}
-                    sx={{ 
-                      height: '40px',
-                      minWidth: '80px',
-                      borderColor: '#667eea',
-                      marginTop:"15px",
-                      color: '#667eea',
-                      '&:hover': {
-                        borderColor: '#5a6fd8',
-                        backgroundColor: '#667eea15',
-                      },
-                    }}
-                  >
-                    Reset
-                  </Button>
-                </Box>
 
                  
               </Box>
@@ -913,7 +961,7 @@ export default function AnnadhanamPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredAnnadhanamList.map((annadhanam, index) => (
+                    paginatedAnnadhanamList.map((annadhanam, index) => (
                       <TableRow key={annadhanam._id} sx={{ '&:hover': { backgroundColor: '#f9fafb' } }}>
                         <TableCell align="center" sx={{ py: 2 }}>
                           <Typography 
@@ -924,7 +972,7 @@ export default function AnnadhanamPage() {
                               fontSize: '0.875rem'
                             }}
                           >
-                            {index + 1}
+{(page - 1) * rowsPerPage + index + 1}
                           </Typography>
                         </TableCell>
                         
@@ -1144,6 +1192,46 @@ export default function AnnadhanamPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            
+                          {/* Pagination */}
+           {totalPages > 1 && (
+  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+    <Pagination
+      count={totalPages}
+      page={page}
+      onChange={handlePageChange}
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
+  </Box>
+)}
+
           </CardContent>
         </Card>
 

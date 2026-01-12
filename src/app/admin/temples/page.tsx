@@ -29,6 +29,9 @@ import {
   Grid,
   InputAdornment,
   Skeleton,
+  
+  Pagination,
+PaginationItem,
 } from '@mui/material';
 import {
   Add,
@@ -205,7 +208,7 @@ export default function TemplesPage() {
   // Filter functions
   const handleApplyFilters = () => {
     // Filters are applied in real-time through filteredTemples, but we can add toast feedback
-    showNotification('Filters applied successfully!', 'success');
+    // showNotification('Filters applied successfully!', 'success');
   };
 
   const handleResetFilters = () => {
@@ -213,7 +216,6 @@ export default function TemplesPage() {
     setLocationFilter('');
     setStatusFilter('all');
     setShowSearchFilter(false);
-    showNotification('All filters have been reset!', 'info');
   };
 
   // Photo view modal
@@ -466,6 +468,25 @@ export default function TemplesPage() {
     return `https://www.google.com/maps?q=${lat},${lng}`;
   };
 
+  const [page, setPage] = useState(1);
+const rowsPerPage = 10;
+
+const totalPages = Math.ceil(filteredTemples.length / rowsPerPage);
+
+const paginatedTemples = filteredTemples.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
+
+const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  setPage(value);
+};
+
+useEffect(() => {
+  setPage(1);
+}, [nameFilter, locationFilter, statusFilter]);
+
+
   return (
     <AdminLayout>
       <Box>
@@ -557,28 +578,28 @@ export default function TemplesPage() {
           <StatCard
             title="Total Temples"
             value={stats.total}
-            icon={<Place sx={{ fontSize: 20 }} />}
+            icon={<Place sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
           <StatCard
             title="Active Temples"
             value={stats.active}
-            icon={<CheckCircle sx={{ fontSize: 20 }} />}
+            icon={<CheckCircle sx={{ fontSize: 38 }} />}
             color="#764ba2"
             loading={statsLoading}
           />
           <StatCard
             title="Popular Temples"
             value={stats.popular}
-            icon={<TrendingUp sx={{ fontSize: 20 }} />}
+            icon={<TrendingUp sx={{ fontSize: 38 }} />}
             color="#8B5CF6"
             loading={statsLoading}
           />
           <StatCard
             title="Total Visits"
             value={stats.totalVisits}
-            icon={<VisibilityIcon sx={{ fontSize: 20 }} />}
+            icon={<VisibilityIcon sx={{ fontSize: 38 }} />}
             color="#667eea"
             loading={statsLoading}
           />
@@ -599,7 +620,7 @@ export default function TemplesPage() {
                     width: 40,
                     height: 40,
                     '&:hover': {
-                      backgroundColor: '#667eea20',
+                      backgroundColor: '#e6efff',
                       color: '#667eea',
                       transform: 'scale(1.05)',
                     },
@@ -608,7 +629,7 @@ export default function TemplesPage() {
                 >
                   <Filter width={20} height={20} />
                 </IconButton>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#374151' }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#7353ae' }}>
                   Temples
                 </Typography>
               </Box>
@@ -654,7 +675,7 @@ export default function TemplesPage() {
                 p: 3,
                 border: '1px solid #e2e8f0' 
               }}>
-                <Typography variant="h6" sx={{ mb: 2, color: '#374151', fontWeight: 600 }}>
+                <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
                   Filter Temples
                 </Typography>
                 
@@ -733,25 +754,20 @@ export default function TemplesPage() {
                 </Box>
 
                 {/* Filter Action Buttons */}
-                <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
+               <Box display="flex" justifyContent="flex-end" gap={2}>
                   <Button
                     variant="outlined"
                     startIcon={<RestartAlt />}
                     onClick={handleResetFilters}
                     sx={{
-                      borderColor: '#667eea',
-                      color: '#667eea',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        borderColor: '#764ba2',
-                        backgroundColor: '#667eea10',
-                        color: '#764ba2',
-                      },
-                    }}
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5a6fd8',
+                          backgroundColor: '#667eea10',
+                          color: '#5a6fd8',
+                        },
+                      }}
                   >
                     Reset
                   </Button>
@@ -761,19 +777,11 @@ export default function TemplesPage() {
                     startIcon={<FilterList />}
                     onClick={handleApplyFilters}
                     sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                        boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                      },
-                    }}
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        },
+                      }}
                   >
                     Filter
                   </Button>
@@ -859,7 +867,7 @@ export default function TemplesPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredTemples.map((temple,index) => (
+                    paginatedTemples.map((temple, index) => (
                       <TableRow key={temple._id} sx={{ '&:hover': { backgroundColor: '#f9fafb' } }}>
                          <TableCell align="center" sx={{ py: 2 }}>
                                                   <Typography 
@@ -870,8 +878,7 @@ export default function TemplesPage() {
                                                       fontSize: '0.875rem'
                                                     }}
                                                   >
-                                                    {index + 1}
-                                                  </Typography>
+{(page - 1) * rowsPerPage + index + 1}                                                  </Typography>
                                                 </TableCell>
                          <TableCell>
                           <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -1058,6 +1065,44 @@ export default function TemplesPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+                         {/* Pagination */}
+          {totalPages > 1 && (
+  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+    <Pagination
+      count={totalPages}
+      page={page}
+      onChange={handlePageChange}
+      size="large"
+      renderItem={(item) => (
+        <PaginationItem
+          {...item}
+          sx={{
+            mx: 0.5,
+            minWidth: 42,
+            height: 42,
+            borderRadius: '50%',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.25s ease',
+
+            '&.Mui-selected': {
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              boxShadow: '0 6px 14px rgba(102,126,234,0.45)',
+              transform: 'scale(1.05)',
+            },
+
+            '&:hover': {
+              backgroundColor: '#e3f2fd',
+              transform: 'translateY(-2px)',
+            },
+          }}
+        />
+      )}
+    />
+  </Box>
+)}
+
           </CardContent>
         </Card>
 
