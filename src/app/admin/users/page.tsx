@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { Filter } from 'iconoir-react';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {
   Box,
   Card,
@@ -200,10 +201,10 @@ export default function UsersPage() {
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+      success: '',
+      error: '',
+      warning: '',
+      info: ''
     };
 
     notifications.show({
@@ -1673,6 +1674,8 @@ const paginatedUsers = filteredUsers.slice(
 const handlePageChange = (_: any, value: number) => {
   setPage(value);
 };
+
+const [showPassword, setShowPassword] = useState(false);
 
   return (
     <AdminLayout>
@@ -3796,43 +3799,55 @@ const handlePageChange = (_: any, value: number) => {
                         </Box>
                       </Box>
                       
-                      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-                        <Box sx={{ flex: 1 }}>
-                          <TextField
-                            fullWidth
-                            label="Password"
-                            type="password"
-                            placeholder="Enter secure password (min 8 characters)"
-                            value={formData.password}
-                            onChange={handlePasswordChange}
-                            required={dialogMode === 'add'}
-                            disabled={dialogMode === 'view'}
-                            helperText={dialogMode === 'edit' ? 'Leave empty to keep current password' : ''}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <Security color="action" />
-                                </InputAdornment>
-                              ),
-                              autoComplete: 'new-password',
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2,
-                                '&:hover fieldset': {
-                                  borderColor: '#3b82f6',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#3b82f6',
-                                  borderWidth: 2,
-                                },
-                              },
-                            }}
-                          />
-                        </Box>
-                        
-                        <Box sx={{ flex: 1 }}></Box>
-                      </Box>
+                     <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+  <Box sx={{ flex: 1 }}>
+    <TextField
+      fullWidth
+      label="Password"
+      type={showPassword ? 'text' : 'password'}
+      placeholder="Enter password (min 8 characters)"
+      value={formData.password}
+      onChange={handlePasswordChange}
+      required={dialogMode === 'add'}
+      disabled={dialogMode === 'view'}
+      helperText={dialogMode === 'edit' ? 'Leave empty to keep current password' : ''}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Security color="action" />
+          </InputAdornment>
+        ),
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton
+              onClick={() => setShowPassword(!showPassword)}
+              edge="end"
+              disabled={dialogMode === 'view'}
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          </InputAdornment>
+        ),
+        autoComplete: 'new-password',
+      }}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+          '&:hover fieldset': {
+            borderColor: '#3b82f6',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: '#3b82f6',
+            borderWidth: 2,
+          },
+        },
+      }}
+    />
+  </Box>
+
+  <Box sx={{ flex: 1 }} />
+</Box>
+
                     </Box>
                   </Box>
 

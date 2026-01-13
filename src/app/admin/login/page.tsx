@@ -50,10 +50,10 @@ export default function AdminLogin() {
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+      success: '',
+      error: '',
+      warning: '',
+      info: ''
     };
 
     notifications.show({
@@ -564,7 +564,6 @@ fontWeight: 'bold',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                 // ✅ RESPONSIVE FIX
         width: { xs: '90%', sm: 420, md: 500 },
         maxHeight: '90vh',
         overflowY: 'auto',

@@ -314,28 +314,28 @@ const sampleQuotes = [
 
 async function addSampleQuotes() {
   try {
-    console.log('🔌 Connecting to MongoDB...');
+    console.log('Connecting to MongoDB...');
     
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI environment variable is not set');
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB successfully');
+    console.log('Connected to MongoDB successfully');
 
     // Check if quotes already exist
     const existingQuotes = await Quote.countDocuments();
-    console.log(`📊 Found ${existingQuotes} existing quotes`);
+    console.log(`Found ${existingQuotes} existing quotes`);
 
     if (existingQuotes > 0) {
-      console.log('⚠️  Sample quotes may already exist. Proceeding anyway...');
+      console.log('  Sample quotes may already exist. Proceeding anyway...');
     }
 
-    console.log('📝 Adding sample quotes...');
+    console.log('Adding sample quotes...');
     
     // Insert sample quotes
     const result = await Quote.insertMany(sampleQuotes);
-    console.log(`✅ Successfully added ${result.length} sample quotes`);
+    console.log(`Successfully added ${result.length} sample quotes`);
 
     // Display summary
     const stats = await Quote.aggregate([
@@ -348,7 +348,7 @@ async function addSampleQuotes() {
       { $sort: { count: -1 } }
     ]);
 
-    console.log('\n📈 Quote Statistics:');
+    console.log('\n Quote Statistics:');
     console.log('Categories:');
     stats.forEach(stat => {
       console.log(`  - ${stat._id}: ${stat.count} quotes (${stat.languages.join(', ')})`);
@@ -368,7 +368,7 @@ async function addSampleQuotes() {
 
     if (totalStats.length > 0) {
       const total = totalStats[0];
-      console.log(`\n📊 Overall Statistics:`);
+      console.log(`\n Overall Statistics:`);
       console.log(`  - Total Quotes: ${total.total}`);
       console.log(`  - Featured Quotes: ${total.featured}`);
       console.log(`  - Total Views: ${total.totalViews}`);
@@ -376,15 +376,15 @@ async function addSampleQuotes() {
       console.log(`  - Total Shares: ${total.totalShares}`);
     }
 
-    console.log('\n🎉 Sample data added successfully!');
-    console.log('🌐 You can now visit: http://localhost:3000/admin/quotes');
+    console.log('\n Sample data added successfully!');
+    console.log(' You can now visit: http://localhost:3000/admin/quotes');
 
   } catch (error) {
-    console.error('❌ Error adding sample quotes:', error);
+    console.error(' Error adding sample quotes:', error);
     process.exit(1);
   } finally {
     await mongoose.connection.close();
-    console.log('🔌 Database connection closed');
+    console.log(' Database connection closed');
   }
 }
 

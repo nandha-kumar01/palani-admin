@@ -69,9 +69,9 @@ function GalleryContent() {
   // Notification Helper Function
   const showNotification = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
     const config = {
-      title: type === 'success' ? '✅ Success' : 
-             type === 'error' ? '❌ Error' : 
-             type === 'warning' ? '⚠️ Warning' : '💡 Info',
+      title: type === 'success' ? 'Success' : 
+             type === 'error' ? 'Error' : 
+             type === 'warning' ? ' Warning' : 'Info',
       message,
       color: type === 'success' ? 'green' : 
              type === 'error' ? 'red' : 

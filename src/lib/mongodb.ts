@@ -35,7 +35,7 @@ if (!MONGODB_URI) {
       'Please define the MONGODB_URI environment variable inside .env.local or Vercel environment variables'
     );
   } else {
-    console.warn('⚠️ MONGODB_URI not found - database connections will fail');
+    console.warn('MONGODB_URI not found - database connections will fail');
   }
 }
 
@@ -102,27 +102,27 @@ async function dbConnect() {
     cached.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((mongoose) => {
-        console.log('✅ MongoDB connected successfully via Mongoose');
-        console.log('🔧 Connection state:', mongoose.connection.readyState);
-        console.log('📊 Registered models:', Object.keys(mongoose.models).length);
+        console.log('MongoDB connected successfully via Mongoose');
+        console.log('Connection state:', mongoose.connection.readyState);
+        console.log('Registered models:', Object.keys(mongoose.models).length);
         
         // Add connection event listeners for better monitoring
         mongoose.connection.on('connected', () => {
-          console.log('📡 Mongoose connected to MongoDB');
+          console.log(' Mongoose connected to MongoDB');
         });
         
         mongoose.connection.on('error', (err) => {
-          console.error('❌ Mongoose connection error:', err);
+          console.error(' Mongoose connection error:', err);
         });
         
         mongoose.connection.on('disconnected', () => {
-          console.log('📡 Mongoose disconnected from MongoDB');
+          console.log(' Mongoose disconnected from MongoDB');
         });
         
         return mongoose;
       })
       .catch((error) => {
-        console.error('❌ MongoDB connection failed:', {
+        console.error(' MongoDB connection failed:', {
           message: error.message,
           code: error.code,
           name: error.name,
@@ -149,7 +149,7 @@ async function dbConnect() {
     cached.promise = null;
     cached.conn = null;
     
-    console.error('❌ Failed to establish MongoDB connection:', {
+    console.error('Failed to establish MongoDB connection:', {
       message: e.message,
       code: e.code,
       name: e.name,
@@ -178,9 +178,9 @@ export async function connectDB(): Promise<Db> {
         retryWrites: true,
       });
       await mongoClient.connect();
-      console.log('✅ MongoDB native client connected successfully');
+      console.log('MongoDB native client connected successfully');
     } catch (error: any) {
-      console.error('❌ MongoDB native client connection error:', {
+      console.error('MongoDB native client connection error:', {
         message: error.message,
         code: error.code,
         name: error.name,

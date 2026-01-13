@@ -978,19 +978,19 @@ export default function NotificationsPage() {
   sx={{
     flex: 1,
     '& .MuiOutlinedInput-root': {
-      borderRadius: 2,            // ✅ border radius
+      borderRadius: 2,            
       backgroundColor: 'white',
 
       '& fieldset': {
-        borderColor: '#ccc',      // normal
+        borderColor: '#ccc',      
       },
 
       '&:hover fieldset': {
-        borderColor: '#667eea',   // ✅ blue hover
+        borderColor: '#667eea',   
       },
 
       '&.Mui-focused fieldset': {
-        borderColor: '#667eea',   // ✅ blue focus
+        borderColor: '#667eea',   
         borderWidth: 2,
       },
     },
@@ -1025,7 +1025,7 @@ export default function NotificationsPage() {
       },
 
       '&:hover fieldset': {
-        borderColor: '#667eea',   // ✅ remove black, use blue
+        borderColor: '#667eea',  
       },
 
       '&.Mui-focused fieldset': {

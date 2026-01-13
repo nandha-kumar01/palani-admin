@@ -52,18 +52,18 @@
     </style>
 </head>
 <body>
-    <h1>🛕 Palani Pathayathirai - OG Image Test</h1>
+    <h1> Palani Pathayathirai - OG Image Test</h1>
     
     <div class="test-section">
-        <h2>📊 OG Image Status Check</h2>
+        <h2>OG Image Status Check</h2>
         <div id="imageStatus"></div>
         
-        <h3>🖼️ Image Preview:</h3>
+        <h3> Image Preview:</h3>
         <img id="ogImage" src="/opengraph-image.png" alt="OG Image Preview" onload="imageLoaded()" onerror="imageError()" />
     </div>
     
     <div class="test-section">
-        <h2>🔗 Test Links</h2>
+        <h2> Test Links</h2>
         <ul>
             <li><a href="/opengraph-image.png" target="_blank">Direct OG Image Link</a></li>
             <li><a href="https://www.opengraph.xyz/" target="_blank">OpenGraph.xyz Validator</a></li>
@@ -73,7 +73,7 @@
     </div>
     
     <div class="test-section">
-        <h2>📋 Technical Details</h2>
+        <h2>Technical Details</h2>
         <ul>
             <li><strong>Image Path:</strong> /opengraph-image.png</li>
             <li><strong>Dimensions:</strong> 928 × 1120 pixels</li>
@@ -86,12 +86,12 @@
     <script>
         function imageLoaded() {
             document.getElementById('imageStatus').innerHTML = 
-                '<div class="status success">✅ SUCCESS: OG Image loaded successfully!</div>';
+                '<div class="status success"> SUCCESS: OG Image loaded successfully!</div>';
         }
         
         function imageError() {
             document.getElementById('imageStatus').innerHTML = 
-                '<div class="status error">❌ ERROR: Could not load OG image. Check if file exists.</div>';
+                '<div class="status error"> ERROR: Could not load OG image. Check if file exists.</div>';
         }
         
         // Test image accessibility
@@ -99,15 +99,15 @@
             .then(response => {
                 if (response.ok) {
                     document.getElementById('imageStatus').innerHTML += 
-                        '<div class="status success">✅ OG Image is accessible via HTTP</div>';
+                        '<div class="status success"> OG Image is accessible via HTTP</div>';
                 } else {
                     document.getElementById('imageStatus').innerHTML += 
-                        '<div class="status error">❌ OG Image HTTP response: ' + response.status + '</div>';
+                        '<div class="status error"> OG Image HTTP response: ' + response.status + '</div>';
                 }
             })
             .catch(error => {
                 document.getElementById('imageStatus').innerHTML += 
-                    '<div class="status error">❌ Network error accessing OG image</div>';
+                    '<div class="status error"> Network error accessing OG image</div>';
             });
     </script>
 </body>

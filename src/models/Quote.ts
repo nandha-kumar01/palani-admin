@@ -169,7 +169,7 @@ quoteSchema.methods.incrementShare = function() {
 };
 
 // Static method to get featured quotes
-quoteSchema.statics.getFeatured = function(limit = 10) {
+quoteSchema.statics.getFeatured = function(limit = 100) {
   return this.find({ 
     isActive: true, 
     isDeleted: false, 
@@ -197,7 +197,7 @@ quoteSchema.statics.getRandom = function(category?: string, language?: string) {
 };
 
 // Static method to get quotes by category
-quoteSchema.statics.getByCategory = function(category: string, limit = 20, page = 1) {
+quoteSchema.statics.getByCategory = function(category: string, limit = 100, page = 1) {
   const skip = (page - 1) * limit;
   return this.find({ 
     category, 

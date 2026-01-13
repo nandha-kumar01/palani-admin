@@ -29,11 +29,11 @@ const requiredVars = [
 const missing = requiredVars.filter(varName => !process.env[varName]);
 
 if (missing.length > 0) {
-  console.error('❌ Missing required environment variables:');
+  console.error(' Missing required environment variables:');
   missing.forEach(varName => {
     console.error(`  - ${varName}`);
   });
-  console.error('\n💡 To fix this in Vercel:');
+  console.error('\n To fix this in Vercel:');
   console.error('1. Go to your Vercel project dashboard');
   console.error('2. Navigate to Settings → Environment Variables');
   console.error('3. Add the missing variables with their values');
@@ -54,9 +54,9 @@ function isValidUrl(string) {
 const urlVars = ['NEXT_PUBLIC_SITE_URL', 'VERCEL_URL'];
 urlVars.forEach(varName => {
   if (process.env[varName] && !isValidUrl(process.env[varName])) {
-    console.warn(`⚠️  Warning: ${varName} may have invalid URL format: ${process.env[varName]}`);
+    console.warn(` Warning: ${varName} may have invalid URL format: ${process.env[varName]}`);
   }
 });
 
-console.log('✅ Environment validation passed');
+console.log('Environment validation passed');
 

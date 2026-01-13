@@ -95,28 +95,24 @@ const showNotification = (type: 'success' | 'error' | 'warning' | 'info', title:
       notifications.show({
         ...config,
         color: 'green',
-        icon: '✅',
       });
       break;
     case 'error':
       notifications.show({
         ...config,
         color: 'red',
-        icon: '❌',
       });
       break;
     case 'warning':
       notifications.show({
         ...config,
         color: 'orange',
-        icon: '⚠️',
       });
       break;
     case 'info':
       notifications.show({
         ...config,
         color: 'blue',
-        icon: 'ℹ️',
       });
       break;
   }
@@ -220,7 +216,7 @@ const handleDrawerToggle = () => {
     const userData = localStorage.getItem('user');
     
     if (!token || !userData) {
-      // showNotification('warning', '🔐 Authentication Required', 'Please log in to access admin panel');
+      // showNotification('warning', 'Authentication Required', 'Please log in to access admin panel');
       router.push('/admin/login');
       return;
     }
@@ -229,7 +225,7 @@ const handleDrawerToggle = () => {
       const parsedUser = JSON.parse(userData);
      
       if (!parsedUser.isAdmin) {
-        showNotification('error', '🚫 Access Denied', 'Administrator privileges required');
+        showNotification('error', 'Access Denied', 'Administrator privileges required');
         router.push('/admin/login');
         return;
       }
@@ -239,12 +235,12 @@ const handleDrawerToggle = () => {
       const hasShownWelcomeInSession = sessionStorage.getItem('hasShownWelcome');
       
       if (!hasShownWelcomeInSession) {
-        showNotification('success', `👋 Welcome back, ${parsedUser.name}!`, 'Access granted to admin panel');
+        showNotification('success', ` Welcome back, ${parsedUser.name}!`, 'Access granted to admin panel');
         sessionStorage.setItem('hasShownWelcome', 'true');
         setHasShownWelcome(true);
       }
     } catch (error) {
-      showNotification('error', '⚠️ Invalid Session', 'Please log in again');
+      showNotification('error', 'Invalid Session', 'Please log in again');
       router.push('/admin/login');
     }
   }, [router]);
@@ -293,7 +289,7 @@ const handleDrawerToggle = () => {
   };
 
   const handleLogout = () => {
-    showNotification('success', '👋 Logged out successfully!', 'See you soon!');
+    showNotification('success', 'Logout successfully!', 'See you soon!');
     
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -314,7 +310,7 @@ const handleDrawerToggle = () => {
     setSelectedLocation(location);
     const locationName = location.city || location.state || location.country;
     if (locationName) {
-      showNotification('info', '📍 Location Filter Applied', `Filtering by ${locationName}`);
+      showNotification('info', 'Location Filter Applied', `Filtering by ${locationName}`);
     }
   }, []);
 
@@ -343,7 +339,7 @@ const handleDrawerToggle = () => {
 
   const handleClearLocation = useCallback(() => {
     setSelectedLocation({});
-    showNotification('info', '🌍 Location Filter Cleared', 'Showing all locations');
+    showNotification('info', 'Location Filter Cleared', 'Showing all locations');
   }, []);
 
   const handleDarkModeToggle = useCallback(() => {
@@ -362,7 +358,7 @@ const handleDrawerToggle = () => {
     }
     
     const timeout = setTimeout(() => {
-      showNotification('info', '🔍 Zoom Level Changed', `Set to ${zoom}%`);
+      showNotification('info', 'Zoom Level Changed', `Set to ${zoom}%`);
     }, 500); // Wait 500ms after user stops dragging
     
     setZoomNotificationTimeout(timeout);
@@ -380,11 +376,11 @@ const handleDrawerToggle = () => {
     if (!isFullscreen) {
       document.documentElement.requestFullscreen?.();
       setIsFullscreen(true);
-      showNotification('info', '🖥️ Fullscreen Mode', 'Entered fullscreen mode');
+      showNotification('info', 'Fullscreen Mode', 'Entered fullscreen mode');
     } else {
       document.exitFullscreen?.();
       setIsFullscreen(false);
-      showNotification('info', '🖥️ Windowed Mode', 'Exited fullscreen mode');
+      showNotification('info', 'Windowed Mode', 'Exited fullscreen mode');
     }
   }, [isFullscreen]);
 
@@ -715,7 +711,7 @@ const handleDrawerToggle = () => {
                             component={Link}
                             href={subItem.path}
                              onClick={() => {
-    if (isMobile) setMobileOpen(false); // ✅ ADD THIS
+    if (isMobile) setMobileOpen(false); 
   }}
                             selected={pathname === subItem.path}
                             sx={{
@@ -832,7 +828,7 @@ const handleDrawerToggle = () => {
                 color="inherit"
                 aria-label="open drawer"
                 edge="start"
-                  onClick={handleDrawerToggle}   // ✅ ADD THIS LINE
+                  onClick={handleDrawerToggle}   
                 sx={{ 
                   display: { md: 'none' },
                   color: '#667eea',
@@ -1272,7 +1268,7 @@ const handleDrawerToggle = () => {
           <Drawer
             variant="temporary"
             open={mobileOpen}
-              onClose={handleDrawerToggle}   // ✅ ADD THIS
+              onClose={handleDrawerToggle}  
             ModalProps={{
               keepMounted: true,
             }}

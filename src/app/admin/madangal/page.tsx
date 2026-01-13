@@ -269,10 +269,10 @@ export default function MadangalPage() {
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+      success: '',
+      error: '',
+      warning: '',
+      info: ''
     };
 
     notifications.show({
@@ -379,7 +379,7 @@ export default function MadangalPage() {
         }, 0);
         
         setStats({ total, active, available, totalCapacity });
-        console.log(`✅ Loaded ${madangalsData.length} madangals successfully`);
+        console.log(`Loaded ${madangalsData.length} madangals successfully`);
         
       } else {
         // Handle API errors

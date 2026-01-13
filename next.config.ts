@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ✅ Enable Turbopack (IMPORTANT FIX)
+  // Enable Turbopack (IMPORTANT FIX)
   turbopack: {},
 
-  // ✅ Experimental features
+  // Experimental features
   experimental: {
     webpackBuildWorker: true,
     optimizeCss: true,
@@ -15,17 +15,17 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // ✅ Server external packages
+  // Server external packages
   serverExternalPackages: ['sharp'],
 
-  // ✅ Performance
+  // Performance
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
 
-  // ✅ Webpack config (ONLY when NOT using Turbopack)
+  //  Webpack config (ONLY when NOT using Turbopack)
   webpack: (config, { dev, isServer, nextRuntime }) => {
-    // 🚫 Turbopack running → skip webpack
+    // Turbopack running → skip webpack
     if (nextRuntime === 'edge') return config;
 
     if (!dev && !isServer) {
@@ -43,19 +43,19 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // ✅ Conditional static export
+  // Conditional static export
   ...(process.env.MOBILE_BUILD === 'true'
     ? {
         output: 'export',
       }
     : {}),
 
-  // ✅ TypeScript
+  // TypeScript
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // ✅ Images
+  // Images
   images: {
     unoptimized: process.env.MOBILE_BUILD === 'true',
     formats: ['image/webp', 'image/avif'],
@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
       ? ''
       : '',
 
-  // ✅ Security headers
+  //  Security headers
   async headers() {
     return [
       {

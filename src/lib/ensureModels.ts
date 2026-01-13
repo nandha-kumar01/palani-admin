@@ -28,12 +28,12 @@ export async function ensureModelsRegistered() {
     // Import all models in parallel
     await Promise.all(models.map(importModel => importModel()));
     
-    console.log('✅ All models registered successfully');
-    console.log('📊 Registered models:', Object.keys(mongoose.models));
+    console.log('All models registered successfully');
+    console.log('Registered models:', Object.keys(mongoose.models));
     
     return true;
   } catch (error) {
-    console.error('❌ Error registering models:', error);
+    console.error(' Error registering models:', error);
     throw error;
   }
 }

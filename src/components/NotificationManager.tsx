@@ -187,7 +187,7 @@ export default function NotificationManager({
             {permission === 'granted' && token && (
               <Box>
                 <Alert severity="success" sx={{ mb: 2 }}>
-                  ✅ Notifications are enabled! You'll receive real-time updates.
+                  Notifications are enabled! You'll receive real-time updates.
                 </Alert>
                 
                 {isAdmin && (

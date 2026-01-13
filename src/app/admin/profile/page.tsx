@@ -48,28 +48,24 @@ const showNotification = (type: 'success' | 'error' | 'warning' | 'info', title:
       notifications.show({
         ...config,
         color: 'green',
-        icon: '✅',
       });
       break;
     case 'error':
       notifications.show({
         ...config,
         color: 'red',
-        icon: '❌',
       });
       break;
     case 'warning':
       notifications.show({
         ...config,
         color: 'yellow',
-        icon: '⚠️',
       });
       break;
     case 'info':
       notifications.show({
         ...config,
         color: 'blue',
-        icon: 'ℹ️',
       });
       break;
   }
@@ -295,14 +291,14 @@ const AdminProfile = () => {
       });
       
       setIsEditing(false);
-      showNotification('success', '✅ Profile Updated', 'Your profile has been successfully updated');
+      showNotification('success', 'Profile Updated', 'Your profile has been successfully updated');
       
       // Reload profile data to ensure consistency
       await loadProfile();
       
       // Show countdown notification and start redirect process
       setRedirecting(true);
-      showNotification('info', '🏠 Redirecting...', 'Taking you back to dashboard in 2 seconds');
+      showNotification('info', ' Redirecting...', 'Taking you back to dashboard in 2 seconds');
       
       // Auto redirect to dashboard after 2 seconds
       setTimeout(() => {
@@ -633,7 +629,7 @@ const AdminProfile = () => {
                     }}
                   />
                   <Chip 
-                    label={profile.status === 'active' ? '✅ Active' : '❌ Inactive'}
+                    label={profile.status === 'active' ? 'Active' : 'Inactive'}
                     color={profile.status === 'active' ? 'success' : 'error'}
                     sx={{
                       fontWeight: 600,

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import TempleHinduIcon from '@mui/icons-material/TempleHindu';
+import GroupsIcon from '@mui/icons-material/Groups';
 import {
   Box,
   Card,
@@ -24,6 +27,7 @@ import {
   TrendingUp,
   LocationOn,
 } from '@mui/icons-material';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -34,8 +38,11 @@ interface DashboardStats {
   totalTemples: number;
   totalAnnadhanam: number;
   totalMadangal: number;
+  totalQuotes: number;
   totalSongs: number;
   totalPhotos: number;
+  totalAnnouncements: number;
+  totalGroups: number;
   usersOnPathayathirai: number;
 }
 
@@ -218,9 +225,19 @@ const StatCard = ({ title, value, icon, color, subtitle }: any) => (
 );
 
 export default function AdminDashboard() {
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [now, setNow] = useState(new Date());
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setNow(new Date());
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -248,7 +265,10 @@ export default function AdminDashboard() {
           totalAnnadhanam: 0,
           totalMadangal: 0,
           totalSongs: 0,
+          totalQuotes: 0,
           totalPhotos: 0,
+          totalGroups: 0,
+          totalAnnouncements: 0,
           usersOnPathayathirai: 0,
         });
       }
@@ -263,6 +283,9 @@ export default function AdminDashboard() {
         totalMadangal: 0,
         totalSongs: 0,
         totalPhotos: 0,
+        totalQuotes: 0,
+        totalGroups: 0,
+        totalAnnouncements: 0,
         usersOnPathayathirai: 0,
       });
     } finally {
@@ -273,6 +296,9 @@ export default function AdminDashboard() {
   if (loading) {
     return <DashboardSkeleton />;
   }
+
+
+
 
   return (
     <AdminLayout>
@@ -288,31 +314,115 @@ export default function AdminDashboard() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <CardContent>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box display="flex" alignItems="center">
-                <LocationOn sx={{ mr: 2, fontSize: 30, color: '#FF6B35' }} />
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
-                    Live Pathayathirai Tracking
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#666' }}>
-                    {stats?.usersOnPathayathirai} devotees currently on their spiritual journey
-                  </Typography>
-                </Box>
-              </Box>
-              <Button 
-                variant="contained" 
-                sx={{ 
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#1976D2' }
-                }}
-              >
-                View Live Map
-              </Button>
-            </Box>
-          </CardContent>
+   <CardContent sx={{ px: 3 }}>
+  <Box
+    display="flex"
+    alignItems="center"
+    justifyContent="space-between"
+    flexWrap="wrap"
+    gap={2}
+  >
+
+    {/* Left Content */}
+    <Box display="flex" alignItems="center" gap={2}>
+      <Box
+        sx={{
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #FF6B35, #FF9F1C)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 16px rgba(255,107,53,0.35)',
+        }}
+      >
+        <LocationOn sx={{ fontSize: 28, color: '#fff' }} />
+      </Box>
+
+      <Box>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 700, color: '#1e293b' }}
+        >
+          Live Pathayathirai Tracking
+        </Typography>
+
+        <Typography
+          variant="body2"
+          sx={{ color: '#64748b' }}
+        >
+          {stats?.usersOnPathayathirai} devotees on spiritual journey
+        </Typography>
+      </Box>
+    </Box>
+
+    {/* Right Section */}
+    <Box display="flex" alignItems="center" gap={2}>
+
+      {/* Time + Date Single Line */}
+      <Box
+  sx={{
+    px: 3,
+    py: 1.2,
+    borderRadius: 2,
+    backgroundColor: '#f4f5fa',
+    border: '1px solid #7353ae',
+    minWidth: 240,
+    textAlign: 'center',
+  }}
+>
+  <Typography
+    sx={{
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      color: '#0f172a',
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {now.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })}{" "}
+    --{" "}
+    {now.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })}
+  </Typography>
+
+ 
+</Box>
+
+
+      {/* View Map Button */}
+      <Button
+        variant="contained"
+        sx={{
+          background: 'linear-gradient(135deg, #2196F3, #1E88E5)',
+          px: 3,
+          py: 1.2,
+          borderRadius: 2,
+          fontWeight: 600,
+          boxShadow: '0 10px 24px rgba(33,150,243,0.35)',
+          transition: 'all 0.25s ease',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #1E88E5, #1565C0)',
+            boxShadow: '0 14px 32px rgba(33,150,243,0.45)',
+            transform: 'translateY(-2px)',
+          },
+        }}
+      >
+        View Live Map
+      </Button>
+
+    </Box>
+  </Box>
+</CardContent>
+
+
         </Card>
 
         {/* Stats Grid */}
@@ -324,17 +434,17 @@ export default function AdminDashboard() {
             icon={<People />}
             color="#2196F3"
           />
-          
+
           <StatCard
-            title="Temples"
+            title="Total Temples"
             value={stats?.totalTemples}
             subtitle="Sacred places registered"
-            icon={<AccountBalance />}
+            icon={<TempleHinduIcon />}
             color="#FF6B35"
           />
           
           <StatCard
-            title="Annadhanam Spots"
+            title="Total Annadhanam Spots"
             value={stats?.totalAnnadhanam}
             subtitle="Food service locations"
             icon={<Restaurant />}
@@ -342,7 +452,7 @@ export default function AdminDashboard() {
           />
           
           <StatCard
-            title="Madangal (Stay)"
+            title="Total Madangal"
             value={stats?.totalMadangal}
             subtitle="Accommodation places"
             icon={<Home />}
@@ -351,12 +461,20 @@ export default function AdminDashboard() {
         </Box>
 
         {/* Content Stats */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3, mb: 4 }}>
+        <Box sx={{ display: 'grid',gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 3, mb: 4 }}>
           <StatCard
-            title="Devotional Songs"
+            title="Total Devotional Songs"
             value={stats?.totalSongs}
             subtitle="Audio files uploaded"
             icon={<MusicNote />}
+            color="#9C27B0"
+          />
+
+           <StatCard
+            title="Total Devotional Quotes"
+            value={stats?.totalQuotes}
+            subtitle="Audio files uploaded"
+            icon={<FormatQuoteIcon />}
             color="#FF9800"
           />
           
@@ -369,13 +487,34 @@ export default function AdminDashboard() {
           />
           
           <StatCard
+            title="Total Announcements"
+            value={stats?.totalAnnouncements}
+            subtitle="Announcements uploaded"
+            icon={<CampaignIcon />}
+            color="#7b5fb6"
+          />
+            
+          
+        </Box>
+
+                <Box sx={{ display: 'grid',gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+<StatCard
+            title="Total Groups"
+            value={stats?.totalGroups}
+            subtitle="Updated groups"
+            icon={<GroupsIcon />}
+            color="#FF6B35"
+          />
+
+          <StatCard
             title="Active Journeys"
             value={stats?.usersOnPathayathirai}
             subtitle="Users currently tracking"
             icon={<TrendingUp />}
             color="#00BCD4"
           />
-        </Box>
+
+</Box>
 
         {/* Quick Actions */}
         <Card 

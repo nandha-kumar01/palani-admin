@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
               <!-- App Info -->
               <div style="text-align: center; margin-top: 25px; padding: 15px; background: #e9eef6; border-radius: 6px;">
                 <p style="color: #666; font-size: 14px; margin: 0; font-style: italic;">
-                  "Step into Devotion, Walk towards Lord Murugan’s Grace" 🙏🙏
+                  "Step into Devotion, Walk towards Lord Murugan’s Grace" 
                 </p>
               </div>
 

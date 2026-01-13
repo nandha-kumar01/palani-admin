@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Send OTP via email
     try {
       await sendOTPEmail(email, otp, 'resend');
-      console.log(`✅ OTP resent successfully to ${email}`);
+      console.log(`OTP resent successfully to ${email}`);
     } catch (emailError: any) {
       console.error('Email sending failed:', emailError);
       return NextResponse.json(

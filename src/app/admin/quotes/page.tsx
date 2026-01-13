@@ -699,6 +699,30 @@ useEffect(() => {
                   />
                   
                   <FormControl fullWidth>
+  <InputLabel>Language</InputLabel>
+  <Select
+    value={languageFilter}
+    label="Language"
+    onChange={(e) => setLanguageFilter(e.target.value)}
+    sx={{
+      borderRadius: 2,
+      backgroundColor: 'white',
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#667eea',
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#667eea',
+        borderWidth: 2,
+      },
+    }}
+  >
+    <MenuItem value="">All Languages</MenuItem>
+    <MenuItem value="tamil">Tamil</MenuItem>
+    <MenuItem value="english">English</MenuItem>
+  </Select>
+</FormControl>
+
+                  <FormControl fullWidth>
                     <InputLabel>Status</InputLabel>
                     <Select
                       value={statusFilter}

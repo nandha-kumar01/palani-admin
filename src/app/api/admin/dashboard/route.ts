@@ -6,6 +6,9 @@ import Annadhanam from '@/models/Annadhanam';
 import Madangal from '@/models/Madangal';
 import Song from '@/models/Song';
 import Gallery from '@/models/Gallery';
+import Quote from '@/models/Quote';
+import  Announcement from '@/models/Announcement';
+import Group from '@/models/Group';
 import { withAuth } from '@/lib/middleware';
 
 // GET - Fetch dashboard statistics (admin only)
@@ -14,28 +17,35 @@ async function getDashboardStats(request: NextRequest) {
     await dbConnect();
 
     // Fetch all stats in parallel for better performance
-    const [
-      totalUsers,
-      activeUsers,
-      totalTemples,
-      totalAnnadhanam,
-      totalMadangal,
-      totalSongs,
-      totalPhotos,
-      usersOnPathayathirai,
-    ] = await Promise.all([
-      User.countDocuments({ isDeleted: { $ne: true } }),
-      User.countDocuments({ isActive: true, isDeleted: { $ne: true } }),
-      Temple.countDocuments({ isActive: true }),
-      Annadhanam.countDocuments({ isActive: true }),
-      Madangal.countDocuments({ isActive: true }),
-      Song.countDocuments(),
-      Gallery.countDocuments({ isActive: true }),
-      User.countDocuments({ 
-        pathayathiraiStatus: 'in_progress', 
-        isDeleted: { $ne: true } 
-      }),
-    ]);
+   const [
+  totalUsers,
+  activeUsers,
+  totalTemples,
+  totalAnnadhanam,
+  totalMadangal,
+  totalSongs,
+  totalQuotes,
+  totalPhotos,
+  totalGroups,
+  totalAnnouncements,
+  usersOnPathayathirai,
+] = await Promise.all([
+  User.countDocuments({ isDeleted: { $ne: true } }),
+  User.countDocuments({ isActive: true, isDeleted: { $ne: true } }),
+  Temple.countDocuments({ isActive: true }),
+  Annadhanam.countDocuments({ isActive: true }),
+  Madangal.countDocuments({ isActive: true }),
+  Song.countDocuments(),
+  Quote.countDocuments({ isActive: true, isDeleted: false }),   // ✅ Quotes
+  Gallery.countDocuments({ isActive: true }),                  // ✅ Photos
+  Announcement.countDocuments({ isActive: true }),             // ✅ Announcements
+  Group.countDocuments({ isActive: true, isDeleted: { $ne: true } }), // ✅ FIXED
+  User.countDocuments({ 
+    pathayathiraiStatus: 'in_progress',
+    isDeleted: { $ne: true }
+  }),
+]);
+
 
     const stats = {
       totalUsers,
@@ -44,7 +54,10 @@ async function getDashboardStats(request: NextRequest) {
       totalAnnadhanam,
       totalMadangal,
       totalSongs,
+      totalQuotes,
       totalPhotos,
+      totalGroups,
+      totalAnnouncements,
       usersOnPathayathirai,
     };
 
