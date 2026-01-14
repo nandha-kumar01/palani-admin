@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://palani-pathaiyathirai.com/sitemap.xml
+Sitemap: https://palani-Padayathirai.com/sitemap.xml
 
 # Disallow admin areas from search engines
 Disallow: /admin/

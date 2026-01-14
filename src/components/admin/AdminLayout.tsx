@@ -310,7 +310,7 @@ const handleDrawerToggle = () => {
     setSelectedLocation(location);
     const locationName = location.city || location.state || location.country;
     if (locationName) {
-      showNotification('info', 'Location Filter Applied', `Filtering by ${locationName}`);
+      // showNotification('info', 'Location Filter Applied', `Filtering by ${locationName}`);
     }
   }, []);
 
@@ -339,7 +339,6 @@ const handleDrawerToggle = () => {
 
   const handleClearLocation = useCallback(() => {
     setSelectedLocation({});
-    showNotification('info', 'Location Filter Cleared', 'Showing all locations');
   }, []);
 
   const handleDarkModeToggle = useCallback(() => {
@@ -522,7 +521,7 @@ const handleDrawerToggle = () => {
                   }
                 }}
               >
-                Palani Pathaiyathirai
+                Palani Padayathirai
               </Typography>
             </Box>
           </Box>

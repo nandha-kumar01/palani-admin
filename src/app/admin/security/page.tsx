@@ -107,10 +107,10 @@ export default function SecurityPage() {
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+      success: '',
+      error: '',
+      warning: '',
+      info: ''
     };
 
     notifications.show({
@@ -691,7 +691,7 @@ useEffect(() => {
                                       fontWeight: 500,
                                     }}
                                   >
-                                    🔒 Cannot display - Encrypted hash only
+                                    Cannot display - Encrypted hash only
                                   </Typography>
                                   <Tooltip title="Hide password info">
                                     <IconButton

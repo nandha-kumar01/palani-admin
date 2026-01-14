@@ -173,6 +173,7 @@ export default function NotificationManager({
                   group activities, and important alerts.
                 </Typography>
                 <Button
+                size='small'
                   variant="contained"
                   startIcon={<Notifications />}
                   onClick={handleRequestPermission}
@@ -193,6 +194,7 @@ export default function NotificationManager({
                 {isAdmin && (
                   <Button
                     variant="outlined"
+                    size='small'
                     startIcon={<Send />}
                     onClick={() => setShowSendDialog(true)}
                     fullWidth

@@ -62,40 +62,48 @@ interface LocationMapProps {
 }
 
 // Component to fit map bounds to all markers
-const FitBounds: React.FC<{ locations: LocationData[], adminLocation: { latitude: number; longitude: number } | null }> = ({ locations, adminLocation }) => {
+const FitBounds: React.FC<{
+  locations: LocationData[];
+  adminLocation: { latitude: number; longitude: number } | null;
+}> = ({ locations, adminLocation }) => {
   const map = useMap();
 
   useEffect(() => {
+    // map is guaranteed after MapContainer mount
+    if (!map) return;
     if (locations.length === 0 && !adminLocation) return;
 
     const bounds = new LatLngBounds([]);
-    
-    // Add all user locations to bounds
-    locations.forEach(location => {
-      bounds.extend([location.latitude, location.longitude]);
+
+    locations.forEach(loc => {
+      if (loc.latitude && loc.longitude) {
+        bounds.extend([loc.latitude, loc.longitude]);
+      }
     });
 
-    // Add admin location to bounds
-    if (adminLocation) {
+    if (adminLocation?.latitude && adminLocation?.longitude) {
       bounds.extend([adminLocation.latitude, adminLocation.longitude]);
     }
 
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [20, 20] });
     }
-  }, [locations, adminLocation, map]);
+  }, [locations, adminLocation]); // ✅ FIXED
 
   return null;
 };
 
+
 const LocationMap: React.FC<LocationMapProps> = ({ locations, adminLocation, height = 400 }) => {
-  const [mapLoaded, setMapLoaded] = useState(false);
+const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMapLoaded(true);
-  }, []);
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setMounted(true);
+  }
+}, []);
 
-  if (!mapLoaded) {
+if (!mounted) {
     return (
       <Box 
         sx={{ 
@@ -143,11 +151,13 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations, adminLocation, hei
   return (
     <Box sx={{ height, position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
       <MapContainer
-        center={mapCenter}
-        zoom={13}
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={true}
-      >
+  key={`${mapCenter[0]}-${mapCenter[1]}`}   // 🔥 IMPORTANT
+  center={mapCenter}
+  zoom={13}
+  style={{ height: '100%', width: '100%' }}
+  zoomControl
+>
+
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

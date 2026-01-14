@@ -90,6 +90,7 @@ export default function TrackingPage() {
   const [trackingMode, setTrackingMode] = useState<'group' | 'individual' | 'all'>('group');
   const [adminLocation, setAdminLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [currentUser, setCurrentUser] = useState<{id: string; name: string} | null>(null);
+const [showFilters, setShowFilters] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -309,6 +310,15 @@ export default function TrackingPage() {
     );
   }
 
+  const isStartDisabled =
+  isTracking ||
+  trackingLoading ||
+  (trackingMode !== 'all' && !selectedGroupId && !selectedUserId);
+
+const isStopDisabled =
+  !isTracking || trackingLoading;
+
+  
   return (
     <AdminLayout>
       <Box >
@@ -423,30 +433,12 @@ export default function TrackingPage() {
           </Alert>
         )}
 
-        {/* Notification Manager */}
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 3, 
-          flexDirection: { xs: 'column', md: 'row' },
-          mb: 3 
-        }}>
-          <Box sx={{ 
-            flex: { xs: '1 1 100%', md: '0 0 33.333%' }
-          }}>
-            <NotificationManager
-              userId={currentUser.id}
-              userName={currentUser.name}
-              isAdmin={true}
-            />
-          </Box>
-          <Box sx={{ 
-            flex: { xs: '1 1 100%', md: '1 1 66.667%' }
-          }}>
-            {/* Real-time Stats */}
+ {/* Real-time Stats */}
             <Box sx={{ 
               display: 'grid', 
               gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr 1fr 1fr' }, 
-              gap: 2 
+              gap: 2, 
+              mb: 3
             }}>
               <Box>
                 <Card sx={{
@@ -532,122 +524,146 @@ export default function TrackingPage() {
                   </CardContent>
                 </Card>
               </Box>
+              
             </Box>
+
+        {/* Notification Manager */}
+        <Box sx={{ 
+         
+          mb: 3 
+        }}>
+          <Box sx={{ 
+            flex: { xs: '1 1 100%', md: '0 0 33.333%' }
+          }}>
+            <NotificationManager
+              userId={currentUser.id}
+              userName={currentUser.name}
+              isAdmin={true}
+            />
           </Box>
+          <Box sx={{ 
+            flex: { xs: '1 1 100%', md: '1 1 66.667%' }
+          }}>
+           
+          </Box>
+          
         </Box>
 
-        {/* Tracking Mode Selection */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 3, 
-              flexDirection: { xs: 'column', md: 'row' }
-            }}>
-              <Box sx={{ 
-                flex: { xs: '1 1 100%', md: '0 0 33.333%' }
-              }}>
-                <FormControl fullWidth>
-                  <InputLabel>Tracking Mode</InputLabel>
-                  <Select
-                    value={trackingMode}
-                    onChange={(e) => setTrackingMode(e.target.value as 'group' | 'individual' | 'all')}
-                    label="Tracking Mode"
-                  >
-                    <MenuItem value="all">
-                      <Box display="flex" alignItems="center">
-                        <Wifi sx={{ mr: 1 }} />
-                        All Users (Live)
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="group">
-                      <Box display="flex" alignItems="center">
-                        <GroupIcon sx={{ mr: 1 }} />
-                        Group Tracking (Live)
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="individual">
-                      <Box display="flex" alignItems="center">
-                        <Person sx={{ mr: 1 }} />
-                        Individual Tracking (Live)
-                      </Box>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
+        
+{/* Tracking Mode Selection */}
+<Card sx={{ mb: 3 }}>
+  <CardContent>
+    <Stack spacing={3}>
+
+      {/* TOP FIELDS */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gap: 3,
+        }}
+      >
+        {/* Tracking Mode */}
+        <FormControl fullWidth>
+          <InputLabel>Tracking Mode</InputLabel>
+          <Select
+            value={trackingMode}
+            label="Tracking Mode"
+            onChange={(e) =>
+              setTrackingMode(e.target.value as 'group' | 'individual' | 'all')
+            }
+          >
+            <MenuItem value="all">
+              <Box display="flex" alignItems="center">
+                <Wifi sx={{ mr: 1 }} /> All Users (Live)
               </Box>
-
-              {trackingMode === 'group' && (
-                <Box sx={{ 
-                  flex: { xs: '1 1 100%', md: '0 0 33.333%' }
-                }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Select Group</InputLabel>
-                    <Select
-                      value={selectedGroupId}
-                      onChange={(e) => setSelectedGroupId(e.target.value)}
-                      label="Select Group"
-                    >
-                      {groups.map((group) => (
-                        <MenuItem key={group._id} value={group._id}>
-                          {group.name} ({group.memberCount} members)
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-              )}
-
-              {trackingMode === 'individual' && (
-                <Box sx={{ 
-                  flex: { xs: '1 1 100%', md: '0 0 33.333%' }
-                }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Select User</InputLabel>
-                    <Select
-                      value={selectedUserId}
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                      label="Select User"
-                    >
-                      {users.map((user) => (
-                        <MenuItem key={user._id} value={user._id}>
-                          {user.name} ({user.email})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-              )}
-
-              <Box sx={{ 
-                flex: { xs: '1 1 100%', md: '0 0 33.333%' }
-              }}>
-                <Box display="flex" gap={2}>
-                  <Button
-                    fullWidth
-                    variant={isTracking ? 'outlined' : 'contained'}
-                    onClick={isTracking ? stopTracking : startTracking}
-                    disabled={trackingLoading || (trackingMode !== 'all' && !selectedGroupId && !selectedUserId)}
-                    sx={{
-                      height: '56px',
-                      background: isTracking ? undefined : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      '&:hover': {
-                        background: isTracking ? undefined : 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                      },
-                    }}
-                  >
-                    {trackingLoading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : isTracking ? (
-                      'Stop Tracking'
-                    ) : (
-                      'Start Live Tracking'
-                    )}
-                  </Button>
-                </Box>
+            </MenuItem>
+            <MenuItem value="group">
+              <Box display="flex" alignItems="center">
+                <GroupIcon sx={{ mr: 1 }} /> Group Tracking
               </Box>
-            </Box>
-          </CardContent>
-        </Card>
+            </MenuItem>
+            <MenuItem value="individual">
+              <Box display="flex" alignItems="center">
+                <Person sx={{ mr: 1 }} /> Individual Tracking
+              </Box>
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Second Field */}
+        {trackingMode === 'group' && (
+          <FormControl fullWidth>
+            <InputLabel>Select Group</InputLabel>
+            <Select
+              value={selectedGroupId}
+              label="Select Group"
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+            >
+              {groups.map((group) => (
+                <MenuItem key={group._id} value={group._id}>
+                  {group.name} ({group.memberCount})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
+        {trackingMode === 'individual' && (
+          <FormControl fullWidth>
+            <InputLabel>Select User</InputLabel>
+            <Select
+              value={selectedUserId}
+              label="Select User"
+              onChange={(e) => setSelectedUserId(e.target.value)}
+            >
+              {users.map((user) => (
+                <MenuItem key={user._id} value={user._id}>
+                  {user.name} ({user.email})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+      </Box>
+
+      {/* BUTTONS */}
+      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
+        <Button
+          variant="contained"
+          disabled={isStartDisabled}
+          onClick={startTracking}
+          sx={{
+            minWidth: 200,
+            height: 52,
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+            },
+          }}
+        >
+          Start Tracking
+        </Button>
+
+        <Button
+          variant="outlined"
+          color="error"
+          disabled={isStopDisabled}
+          onClick={stopTracking}
+          sx={{
+            minWidth: 200,
+            height: 52,
+            borderWidth: 2,
+          }}
+        >
+          Stop Tracking
+        </Button>
+      </Box>
+
+    </Stack>
+  </CardContent>
+</Card>
+
 
         {/* Admin Location */}
         {adminLocation && (

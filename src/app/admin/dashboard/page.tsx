@@ -171,8 +171,9 @@ const DashboardSkeleton = () => (
   </AdminLayout>
 );
 
-const StatCard = ({ title, value, icon, color, subtitle }: any) => (
+const StatCard = ({ title, value, icon, color, subtitle, onClick }: any) => (
   <Card 
+      onClick={onClick}
     sx={{ 
       height: '100%',
       background: 'white', // White background
@@ -314,7 +315,7 @@ useEffect(() => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-   <CardContent sx={{ px: 3 }}>
+   <CardContent>
   <Box
     display="flex"
     alignItems="center"
@@ -324,28 +325,48 @@ useEffect(() => {
   >
 
     {/* Left Content */}
-    <Box display="flex" alignItems="center" gap={2}>
-      <Box
-        sx={{
-          width: 52,
-          height: 52,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #FF6B35, #FF9F1C)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 6px 16px rgba(255,107,53,0.35)',
-        }}
-      >
-        <LocationOn sx={{ fontSize: 28, color: '#fff' }} />
-      </Box>
+  <Box display="flex" alignItems="center" gap={2}>
+ <Box
+  sx={{
+    width: 52,
+    height: 52,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(30, 136, 229, 0.35)',
+    cursor: 'pointer',
+
+    transition: 'all 0.35s ease',
+
+    '&:hover': {
+      background: 'linear-gradient(135deg, #1E88E5 0%, #0D47A1 100%)',
+      boxShadow: '0 8px 20px rgba(13, 71, 161, 0.55)',
+      transform: 'translateY(-4px) scale(1.05)',
+    },
+
+    '&:active': {
+      transform: 'translateY(-1px) scale(0.98)',
+    },
+  }}
+>
+  <LocationOn
+    sx={{
+      fontSize: 28,
+      color: '#fff',
+      transition: 'transform 0.35s ease',
+    }}
+  />
+</Box>
+
 
       <Box>
         <Typography
           variant="h6"
           sx={{ fontWeight: 700, color: '#1e293b' }}
         >
-          Live Pathayathirai Tracking
+          Live Padayathirai Tracking
         </Typography>
 
         <Typography
@@ -414,6 +435,7 @@ useEffect(() => {
             transform: 'translateY(-2px)',
           },
         }}
+        onClick={() => router.push('/admin/tracking')}
       >
         View Live Map
       </Button>
@@ -433,6 +455,8 @@ useEffect(() => {
             subtitle={`${stats?.activeUsers} active today`}
             icon={<People />}
             color="#2196F3"
+            onClick={() => router.push('/admin/users')}
+
           />
 
           <StatCard
@@ -441,6 +465,7 @@ useEffect(() => {
             subtitle="Sacred places registered"
             icon={<TempleHinduIcon />}
             color="#FF6B35"
+            onClick={() => router.push('/admin/temples')}
           />
           
           <StatCard
@@ -449,6 +474,7 @@ useEffect(() => {
             subtitle="Food service locations"
             icon={<Restaurant />}
             color="#4CAF50"
+            onClick={() => router.push('/admin/annadhanam')}
           />
           
           <StatCard
@@ -457,6 +483,7 @@ useEffect(() => {
             subtitle="Accommodation places"
             icon={<Home />}
             color="#9C27B0"
+            onClick={() => router.push('/admin/madangal')}
           />
         </Box>
 
@@ -468,6 +495,7 @@ useEffect(() => {
             subtitle="Audio files uploaded"
             icon={<MusicNote />}
             color="#9C27B0"
+            onClick={() => router.push('/admin/songs')}
           />
 
            <StatCard
@@ -476,6 +504,7 @@ useEffect(() => {
             subtitle="Audio files uploaded"
             icon={<FormatQuoteIcon />}
             color="#FF9800"
+            onClick={() => router.push('/admin/quotes')}
           />
           
           <StatCard
@@ -484,6 +513,7 @@ useEffect(() => {
             subtitle="Images in gallery"
             icon={<PhotoLibrary />}
             color="#E91E63"
+            onClick={() => router.push('/admin/gallery')}
           />
           
           <StatCard
@@ -492,6 +522,7 @@ useEffect(() => {
             subtitle="Announcements uploaded"
             icon={<CampaignIcon />}
             color="#7b5fb6"
+            onClick={() => router.push('/admin/announcements')}
           />
             
           
@@ -504,6 +535,7 @@ useEffect(() => {
             subtitle="Updated groups"
             icon={<GroupsIcon />}
             color="#FF6B35"
+            onClick={() => router.push('/admin/groups')}
           />
 
           <StatCard
@@ -512,6 +544,7 @@ useEffect(() => {
             subtitle="Users currently tracking"
             icon={<TrendingUp />}
             color="#00BCD4"
+            onClick={() => router.push('/admin/tracking')}
           />
 
 </Box>
@@ -564,18 +597,7 @@ useEffect(() => {
                   Manage your platform with these shortcuts
                 </Typography>
               </Box>
-              <Box sx={{
-                width: 60,
-                height: 60,
-                background: 'rgba(255,255,255,0.2)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(10px)',
-              }}>
-                <TrendingUp sx={{ color: 'white', fontSize: 30 }} />
-              </Box>
+             
             </Box>
             
             <Box sx={{ 

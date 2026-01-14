@@ -302,7 +302,7 @@ fontWeight: 'bold',
       color: 'black',
     }}
   >
-    PALANI PATHAIYATHIRAI
+    PALANI PADAYATHIRAI
   </Typography>
               <Typography 
                 variant="h6" 

@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 10px; text-align: center; border-radius: 8px 8px 0 0;">
               <h1 style="color: white; font-size: 28px; font-weight: bold; margin: 0;">
-                Palani Pathaiyathirai
+                Palani Padayathirai
               </h1>
               <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0 0;">
                 Sacred Pilgrimage App
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
         </html>
       `,
     };
-              // <img src="https://res.cloudinary.com/dy5vca5ux/image/upload/v1761306227/logonobg_xawm99.png" alt="Palani Pathaiyathirai Logo" style="height: 60px; width: auto; max-width: 200px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);" />
+              // <img src="https://res.cloudinary.com/dy5vca5ux/image/upload/v1761306227/logonobg_xawm99.png" alt="Palani Padayathirai Logo" style="height: 60px; width: auto; max-width: 200px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(255,255,255,0.2);" />
 
     await transporter.sendMail(mailOptions);
 

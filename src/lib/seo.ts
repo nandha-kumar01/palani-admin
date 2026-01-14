@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 
 export const siteConfig = {
-  name: "Palani Pathaiyathirai",
+  name: "Palani Padayathirai",
   description: "Complete pilgrimage management platform for Lord Murugan devotees. Track your sacred journey, participate in annadhanam, connect with fellow pilgrims, and experience the blessed path to enlightenment.",
-  url: "https://palani-pathaiyathirai.com",
+  url: "https://palani-Padayathirai.com",
   ogImage: "/og-image.png",
   logo: "/logonobg .png",
   favicon: "/favicon.ico",
   keywords: [
-    "palani pathaiyathirai",
+    "palani Padayathirai",
     "lord murugan",
     "pilgrimage tracking",
     "devotional app",
@@ -30,22 +30,22 @@ export const siteConfig = {
   ],
   authors: [
     {
-      name: "Palani Pathaiyathirai Development Team",
-      url: "https://palani-pathaiyathirai.com/team",
+      name: "Palani Padayathirai Development Team",
+      url: "https://palani-Padayathirai.com/team",
     },
   ],
-  creator: "Palani Pathaiyathirai Team",
-  publisher: "Palani Pathaiyathirai Organization",
+  creator: "Palani Padayathirai Team",
+  publisher: "Palani Padayathirai Organization",
   contact: {
-    email: "support@palani-pathaiyathirai.com",
+    email: "support@palani-Padayathirai.com",
     phone: "+91-XXXX-XXXXXX",
     address: "Palani Malai, Palani, Tamil Nadu 624601, India"
   },
   social: {
     twitter: "@PalaniPathayathirai",
-    facebook: "https://facebook.com/palanipathaiyathirai",
-    instagram: "https://instagram.com/palanipathaiyathirai",
-    youtube: "https://youtube.com/@palanipathaiyathirai"
+    facebook: "https://facebook.com/palaniPadayathirai",
+    instagram: "https://instagram.com/palaniPadayathirai",
+    youtube: "https://youtube.com/@palaniPadayathirai"
   },
   geo: {
     latitude: "10.4530",
@@ -163,20 +163,20 @@ export function generateSEO({
 export const pagesSEO = {
   home: generateSEO({
     title: "Sacred Journey to Lord Murugan",
-    description: "Welcome to Palani Pathaiyathirai - Your divine companion for the sacred pilgrimage to Palani Malai. Join thousands of devotees in their blessed journey.",
+    description: "Welcome to Palani Padayathirai - Your divine companion for the sacred pilgrimage to Palani Malai. Join thousands of devotees in their blessed journey.",
     keywords: ["welcome", "home", "sacred journey", "divine pilgrimage"],
   }),
   
   admin: generateSEO({
     title: "Admin Dashboard",
-    description: "Administrative panel for managing Palani Pathaiyathirai platform. Manage devotees, track pilgrimages, oversee temple activities and services.",
+    description: "Administrative panel for managing Palani Padayathirai platform. Manage devotees, track pilgrimages, oversee temple activities and services.",
     keywords: ["admin", "dashboard", "management", "control panel"],
     url: "/admin",
   }),
   
   login: generateSEO({
     title: "Admin Login",
-    description: "Secure login portal for Palani Pathaiyathirai administrators. Access the management dashboard to oversee devotional services.",
+    description: "Secure login portal for Palani Padayathirai administrators. Access the management dashboard to oversee devotional services.",
     keywords: ["login", "authentication", "admin access", "secure portal"],
     url: "/admin/login",
   }),
@@ -190,14 +190,14 @@ export const pagesSEO = {
   
   users: generateSEO({
     title: "Devotee Management",
-    description: "Manage registered devotees, their profiles, pilgrimage history, and spiritual journey progress in the Palani Pathaiyathirai platform.",
+    description: "Manage registered devotees, their profiles, pilgrimage history, and spiritual journey progress in the Palani Padayathirai platform.",
     keywords: ["devotee management", "user profiles", "pilgrimage history"],
     url: "/admin/users",
   }),
   
   temples: generateSEO({
     title: "Temple Management",
-    description: "Comprehensive management of temples, their services, facilities, and activities along the Palani Pathaiyathirai route.",
+    description: "Comprehensive management of temples, their services, facilities, and activities along the Palani Padayathirai route.",
     keywords: ["temple management", "religious facilities", "temple services"],
     url: "/admin/temples",
   }),

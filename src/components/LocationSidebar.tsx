@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button } from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import ClearIcon from '@mui/icons-material/Clear';
 import {
   Box,
   Drawer,
@@ -116,6 +119,7 @@ const sampleLocationData: LocationData = {
   ],
 };
 
+
 export default function LocationSidebar({ open, onClose, onLocationSelect }: LocationSidebarProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -127,6 +131,7 @@ export default function LocationSidebar({ open, onClose, onLocationSelect }: Loc
   
   const [availableStates, setAvailableStates] = useState<State[]>([]);
   const [availableCities, setAvailableCities] = useState<City[]>([]);
+const APP_HEADER_HEIGHT = 80; // main header height
 
   // Update available states when country changes
   useEffect(() => {
@@ -171,10 +176,35 @@ export default function LocationSidebar({ open, onClose, onLocationSelect }: Loc
 
   // Notify parent when location selection changes
   useEffect(() => {
-    if (onLocationSelect) {
-      onLocationSelect(currentLocationData);
-    }
-  }, [currentLocationData, onLocationSelect]);
+  if (!onLocationSelect) return;
+
+  if (selectedCity || selectedState || selectedCountry) {
+    onLocationSelect(currentLocationData);
+  }
+}, [selectedCountry, selectedState, selectedCity]);
+
+
+const handleClearLocation = () => {
+  setSelectedCountry('');
+  setSelectedState('');
+  setSelectedCity('');
+  setAvailableStates([]);
+  setAvailableCities([]);
+
+  // Optional: parent-ku clear inform panna
+  if (onLocationSelect) {
+    onLocationSelect({});
+  }
+};
+
+
+const handleSaveLocation = () => {
+  if (!onLocationSelect) return;
+
+  onLocationSelect(currentLocationData); // save
+  onClose(); // auto close sidebar
+};
+
 
   const handleCountryChange = useCallback((event: SelectChangeEvent<string>) => {
     setSelectedCountry(event.target.value);
@@ -188,204 +218,220 @@ export default function LocationSidebar({ open, onClose, onLocationSelect }: Loc
     setSelectedCity(event.target.value);
   }, []);
 
-  const sidebarContent = (
-    <Box sx={{ width: sidebarWidth, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          background: 'linear-gradient(135deg, #FF6B35 0%, #FFA726 100%)',
-          color: 'white',
-          p: 3,
-          borderRadius: 0,
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center">
-            <LocationOn sx={{ mr: 1 }} />
-            <Typography variant="h6" fontWeight="bold">
-              Location Filter
-            </Typography>
-          </Box>
-          {isMobile && (
-            <IconButton
-              onClick={onClose}
-              sx={{ color: 'white', ml: 1 }}
-              size="small"
-            >
-              <CloseIcon />
-            </IconButton>
-          )}
+ const sidebarContent = (
+  <Box
+    sx={{
+      width: sidebarWidth,
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: 'white',
+    }}
+  >
+    {/* ===== SIDEBAR HEADER (BELOW MAIN HEADER) ===== */}
+    <Box
+      sx={{
+        position: 'sticky',
+        top: APP_HEADER_HEIGHT,
+        zIndex: 5,
+        px: 3,
+        py: 2.5,
+        backgroundColor: '#eaeffc',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box display="flex" alignItems="center" gap={1} sx={{marginLeft:"25px"}}>
+          <LocationOn color="primary" />
+          <Typography variant="h6" fontWeight={700}>
+            Location Filter
+          </Typography>
         </Box>
-        <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
-          Select location to filter data
-        </Typography>
-      </Paper>
 
-      <Divider />
-
-      {/* Location Filters */}
-      <Box sx={{ flex: 1, p: 2 }}>
-        <Stack spacing={3}>
-          {/* Country Selection */}
-          <Accordion defaultExpanded>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              sx={{
-                backgroundColor: 'background.paper',
-                '&:hover': { backgroundColor: 'action.hover' },
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                <CountryIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="subtitle1" fontWeight="medium">
-                  Country
-                </Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>Select Country</InputLabel>
-                <Select
-                  value={selectedCountry}
-                  onChange={handleCountryChange}
-                  label="Select Country"
-                >
-                  <MenuItem value="">
-                    <em>All Countries</em>
-                  </MenuItem>
-                  {locationData.countries.map((country) => (
-                    <MenuItem key={country.id} value={country.id}>
-                      {country.name} ({country.code})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </AccordionDetails>
-          </Accordion>
-
-          {/* State Selection */}
-          <Accordion defaultExpanded disabled={!selectedCountry}>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              sx={{
-                backgroundColor: selectedCountry ? 'background.paper' : 'action.disabledBackground',
-                '&:hover': { 
-                  backgroundColor: selectedCountry ? 'action.hover' : 'action.disabledBackground',
-                },
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                <StateIcon sx={{ mr: 1, color: selectedCountry ? 'primary.main' : 'text.disabled' }} />
-                <Typography 
-                  variant="subtitle1" 
-                  fontWeight="medium"
-                  color={selectedCountry ? 'text.primary' : 'text.disabled'}
-                >
-                  State / Province
-                </Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <FormControl fullWidth variant="outlined" disabled={!selectedCountry}>
-                <InputLabel>Select State</InputLabel>
-                <Select
-                  value={selectedState}
-                  onChange={handleStateChange}
-                  label="Select State"
-                >
-                  <MenuItem value="">
-                    <em>All States</em>
-                  </MenuItem>
-                  {availableStates.map((state) => (
-                    <MenuItem key={state.id} value={state.id}>
-                      {state.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </AccordionDetails>
-          </Accordion>
-
-          {/* City Selection */}
-          <Accordion defaultExpanded disabled={!selectedState}>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              sx={{
-                backgroundColor: selectedState ? 'background.paper' : 'action.disabledBackground',
-                '&:hover': { 
-                  backgroundColor: selectedState ? 'action.hover' : 'action.disabledBackground',
-                },
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                <CityIcon sx={{ mr: 1, color: selectedState ? 'primary.main' : 'text.disabled' }} />
-                <Typography 
-                  variant="subtitle1" 
-                  fontWeight="medium"
-                  color={selectedState ? 'text.primary' : 'text.disabled'}
-                >
-                  City
-                </Typography>
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <FormControl fullWidth variant="outlined" disabled={!selectedState}>
-                <InputLabel>Select City</InputLabel>
-                <Select
-                  value={selectedCity}
-                  onChange={handleCityChange}
-                  label="Select City"
-                >
-                  <MenuItem value="">
-                    <em>All Cities</em>
-                  </MenuItem>
-                  {availableCities.map((city) => (
-                    <MenuItem key={city.id} value={city.id}>
-                      {city.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </AccordionDetails>
-          </Accordion>
-        </Stack>
-
-        {/* Selected Location Summary */}
-        {(selectedCountry || selectedState || selectedCity) && (
-          <Paper
-            sx={{
-              mt: 3,
-              p: 2,
-              backgroundColor: 'primary.light',
-              color: 'primary.contrastText',
-            }}
-          >
-            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-              Selected Location:
-            </Typography>
-            <Stack spacing={0.5}>
-              {selectedCountry && (
-                <Typography variant="body2">
-                  Country: {locationData.countries.find(c => c.id === selectedCountry)?.name}
-                </Typography>
-              )}
-              {selectedState && (
-                <Typography variant="body2">
-                  State: {availableStates.find(s => s.id === selectedState)?.name}
-                </Typography>
-              )}
-              {selectedCity && (
-                <Typography variant="body2">
-                  City: {availableCities.find(c => c.id === selectedCity)?.name}
-                </Typography>
-              )}
-            </Stack>
-          </Paper>
+        {isMobile && (
+          <IconButton size="small" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
         )}
       </Box>
+
+      <Typography
+        variant="body2"
+        sx={{ mt: 0.5, color: '#7353ae' }}
+      >
+        Filter data by country, state and city
+      </Typography>
     </Box>
-  );
+
+    {/* ===== CONTENT ===== */}
+    <Box
+      sx={{
+        flex: 1,
+        overflowY: 'hidden',
+        px: 3,
+        py: 3,
+        marginTop:"30%",
+        
+            }}
+    >
+      <Stack spacing={3}>
+
+        {/* COUNTRY */}
+        <Paper sx={{ p: 2.5, borderRadius: 3,backgroundColor:"#f4f5fa" }}>
+          <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
+            Country
+          </Typography>
+          <FormControl
+  fullWidth
+  size="small"
+  sx={{
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+
+      // 🔹 default border
+      '& fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      // 🔵 hover border
+      '&:hover fieldset': {
+        borderColor: '#2563eb', // blue
+      },
+
+      // 🔵 focus border
+      '&.Mui-focused fieldset': {
+        borderColor: '#2563eb',
+        borderWidth: 2,
+      },
+    },
+
+    // 🔵 label color on focus
+    '& .MuiInputLabel-root.Mui-focused': {
+      color: '#2563eb',
+    },
+  }}
+>
+  <InputLabel>Select Country</InputLabel>
+  <Select
+    value={selectedCountry}
+    label="Select Country"
+    onChange={handleCountryChange}
+  >
+    <MenuItem value="">All Countries</MenuItem>
+    {locationData.countries.map((c) => (
+      <MenuItem key={c.id} value={c.id}>
+        {c.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+        </Paper>
+
+        {/* STATE */}
+        <Paper sx={{ p: 2.5, borderRadius: 3,backgroundColor:"#f4f5fa" }}>
+          <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
+            State 
+          </Typography>
+          <FormControl fullWidth size="small" disabled={!selectedCountry}>
+            <InputLabel>Select State</InputLabel>
+            <Select
+              value={selectedState}
+              label="Select State"
+              onChange={handleStateChange}
+            >
+              <MenuItem value="">All States</MenuItem>
+              {availableStates.map((s) => (
+                <MenuItem key={s.id} value={s.id}>
+                  {s.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
+
+        {/* CITY */}
+        <Paper sx={{ p: 2.5, borderRadius: 3,backgroundColor:"#f4f5fa" }}>
+           <Typography variant="h6" sx={{ mb: 2, color: '#7353ae', fontWeight: "bold" }}>
+            City
+          </Typography>
+          <FormControl fullWidth size="small" disabled={!selectedState}>
+            <InputLabel>Select City</InputLabel>
+            <Select
+              value={selectedCity}
+              label="Select City"
+              onChange={handleCityChange}
+            >
+              <MenuItem value="">All Cities</MenuItem>
+              {availableCities.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
+
+       
+
+        <Box height={24} />
+      </Stack>
+    </Box>
+ {/* ===== ACTION FOOTER ===== */}
+<Box
+  sx={{
+    position: 'sticky',
+    bottom: 0,
+    backgroundColor: '#ffffff',
+    borderTop: '1px solid',
+    borderColor: 'divider',
+    px: 3,
+    py: 2,
+  }}
+>
+  <Stack direction="row" spacing={2}>
+    <Button
+      variant="outlined"
+      onClick={handleClearLocation}
+      disabled={!selectedCountry && !selectedState && !selectedCity}
+      sx={{
+                    borderColor: '#e0e0e0',
+                    color: '#666',
+                    '&:hover': {
+                      borderColor: '#bdbdbd',
+                      backgroundColor: '#f5f5f5',
+                    },
+                  }}
+                   startIcon={<ClearIcon />}
+    >
+      Clear
+    </Button>
+
+    <Box flex={1} />
+
+    <Button
+      variant="contained"
+      startIcon={<SaveIcon />}
+      onClick={handleSaveLocation}
+      disabled={!selectedCountry}
+      sx={{ 
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                    },
+                  }}
+    >
+      Save
+    </Button>
+  </Stack>
+</Box>
+
+
+  </Box>
+);
+
 
   return (
     <Drawer

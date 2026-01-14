@@ -38,20 +38,20 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Palani Pathaiyathirai - Divine Journey Tracking & Management System",
-    template: "%s | Palani Pathaiyathirai - Sacred Pilgrimage Platform"
+    default: "Palani Padayathirai - Divine Journey Tracking & Management System",
+    template: "%s | Palani Padayathirai - Sacred Pilgrimage Platform"
   },
-  description: "Experience the divine journey with Palani Pathaiyathirai - Complete pilgrimage management system for devotees of Lord Murugan. Track your sacred journey, connect with fellow devotees, manage temple visits, annadhanam services, and spiritual activities. Join thousands of devotees in their blessed Pathayathirai to Palani Malai.",
+  description: "Experience the divine journey with Palani Padayathirai - Complete pilgrimage management system for devotees of Lord Murugan. Track your sacred journey, connect with fellow devotees, manage temple visits, annadhanam services, and spiritual activities. Join thousands of devotees in their blessed Pathayathirai to Palani Malai.",
   keywords: [
-    "palani pathaiyathirai", "lord murugan", "pilgrimage tracking", "devotional app", 
+    "palani Padayathirai", "lord murugan", "pilgrimage tracking", "devotional app", 
     "temple management", "annadhanam", "pathayathirai", "palani malai", "murugan devotees",
     "spiritual journey", "temple services", "devotee tracking", "pilgrimage management",
     "tamil temples", "hindu pilgrimage", "sacred journey", "temple activities",
     "devotional platform", "spiritual community", "temple administration"
   ],
-  authors: [{ name: "Palani Pathaiyathirai Development Team" }],
-  creator: "Palani Pathaiyathirai Team",
-  publisher: "Palani Pathaiyathirai Organization",
+  authors: [{ name: "Palani Padayathirai Development Team" }],
+  creator: "Palani Padayathirai Team",
+  publisher: "Palani Padayathirai Organization",
   category: "Religion & Spirituality",
   classification: "Devotional Management Platform",
   formatDetection: {
@@ -64,15 +64,15 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: baseUrl,
-    siteName: 'Palani Pathaiyathirai - Divine Journey Platform',
-    title: 'Palani Pathaiyathirai - Sacred Pilgrimage Management & Devotee Tracking System',
-    description: 'Join the divine Pathaiyathirai to Palani Malai! Complete pilgrimage management platform for Lord Murugan devotees. Track your sacred journey, participate in annadhanam, connect with fellow pilgrims, and experience the blessed path to enlightenment.',
+    siteName: 'Palani Padayathirai - Divine Journey Platform',
+    title: 'Palani Padayathirai - Sacred Pilgrimage Management & Devotee Tracking System',
+    description: 'Join the divine Padayathirai to Palani Malai! Complete pilgrimage management platform for Lord Murugan devotees. Track your sacred journey, participate in annadhanam, connect with fellow pilgrims, and experience the blessed path to enlightenment.',
     images: [
       {
         url: '/opengraph-image.png',
         width: 928,
         height: 1120,
-        alt: 'Palani Pathaiyathirai - Sacred Journey to Lord Murugan Temple',
+        alt: 'Palani Padayathirai - Sacred Journey to Lord Murugan Temple',
         type: 'image/png',
       }
     ],
@@ -85,8 +85,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@PalaniPathayathirai',
     creator: '@PalaniDevTeam',
-    title: 'Palani Pathaiyathirai - Sacred Pilgrimage Management System',
-    description: 'Experience the divine journey to Palani Malai! Complete devotional platform for Lord Murugan pilgrims. Track your sacred path, join annadhanam services, and connect with fellow devotees. #PalaniPathaiyathirai #LordMurugan #SacredJourney',
+    title: 'Palani Padayathirai - Sacred Pilgrimage Management System',
+    description: 'Experience the divine journey to Palani Malai! Complete devotional platform for Lord Murugan pilgrims. Track your sacred path, join annadhanam services, and connect with fellow devotees. #PalaniPadayathirai #LordMurugan #SacredJourney',
     images: ['/opengraph-image.png'],
   },
   // Additional meta tags
@@ -137,8 +137,8 @@ export default function RootLayout({
       <head>
         <StructuredData />
         {/* Additional SEO Meta Tags */}
-        <meta name="application-name" content="Palani Pathaiyathirai" />
-        <meta name="apple-mobile-web-app-title" content="Palani Pathaiyathirai" />
+        <meta name="application-name" content="Palani Padayathirai" />
+        <meta name="apple-mobile-web-app-title" content="Palani Padayathirai" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
@@ -154,7 +154,7 @@ export default function RootLayout({
         {/* Religious/Cultural Meta Tags */}
         <meta name="subject" content="Hindu Pilgrimage and Devotional Services" />
         <meta name="topic" content="Lord Murugan Devotional Platform" />
-        <meta name="summary" content="Complete pilgrimage management system for Palani Pathaiyathirai devotees" />
+        <meta name="summary" content="Complete pilgrimage management system for Palani Padayathirai devotees" />
         
         {/* Additional Open Graph Tags */}
         <meta property="og:street-address" content="Palani Malai" />
@@ -168,7 +168,7 @@ export default function RootLayout({
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="928" />
         <meta property="og:image:height" content="1120" />
-        <meta property="og:image:alt" content="Palani Pathaiyathirai - Sacred Journey to Lord Murugan Temple" />
+        <meta property="og:image:alt" content="Palani Padayathirai - Sacred Journey to Lord Murugan Temple" />
         
         {/* Schema.org JSON-LD for Religious Organization */}
         <script
@@ -177,15 +177,15 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "ReligiousOrganization",
-              "name": "Palani Pathaiyathirai",
+              "name": "Palani Padayathirai",
               "alternateName": "Palani Pathayathirai",
               "description": "Sacred pilgrimage management platform for Lord Murugan devotees",
               "url": baseUrl,
               "logo": `${baseUrl}/logonobg.png`,
               "image": `${baseUrl}/opengraph-image.png`,
               "sameAs": [
-                "https://facebook.com/palanipathaiyathirai",
-                "https://instagram.com/palanipathaiyathirai",
+                "https://facebook.com/palaniPadayathirai",
+                "https://instagram.com/palaniPadayathirai",
                 "https://twitter.com/PalaniPathayathirai"
               ],
               "address": {
@@ -202,7 +202,7 @@ export default function RootLayout({
                 "longitude": "77.5200"
               },
               "telephone": "+91-XXXX-XXXXXX",
-              "email": "support@palani-pathaiyathirai.com"
+              "email": "support@palani-Padayathirai.com"
             })
           }}
         />

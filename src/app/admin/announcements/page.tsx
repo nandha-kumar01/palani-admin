@@ -165,10 +165,10 @@ export default function AnnouncementsPage() {
   // Notification helper function
   const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     const icons = {
-      success: '✅',
-      error: '❌',
-      warning: '⚠️',
-      info: 'ℹ️'
+      success: '',
+      error: '',
+      warning: '',
+      info: ''
     };
 
     notifications.show({
@@ -296,21 +296,27 @@ export default function AnnouncementsPage() {
     setDialogOpen(true);
   };
 
-  const handleEdit = (announcement: Announcement) => {
-    setFormData({
-      title: announcement.title,
-      message: announcement.message,
-      type: announcement.type,
-      targetAudience: announcement.targetAudience,
-      location: announcement.location || { latitude: 0, longitude: 0, radius: 1 },
-      sendPushNotification: announcement.sendPushNotification,
-      scheduledAt: announcement.scheduledAt || '',
-      isActive: announcement.isActive,
-    });
-    setSelectedAnnouncement(announcement);
-    setDialogMode('edit');
-    setDialogOpen(true);
-  };
+const handleEdit = (announcement: Announcement) => {
+  setFormData({
+    title: announcement.title,
+    message: announcement.message,
+    type: announcement.type,
+    targetAudience: announcement.targetAudience,
+    location: announcement.location || {
+      latitude: 0,
+      longitude: 0,
+      radius: 1,
+    },
+    sendPushNotification: announcement.sendPushNotification,
+    scheduledAt: formatDateTimeLocal(announcement.scheduledAt),
+    isActive: announcement.isActive,
+  });
+
+  setSelectedAnnouncement(announcement);
+  setDialogMode('edit');
+  setDialogOpen(true);
+};
+
 
   const handleView = (announcement: Announcement) => {
     setSelectedAnnouncement(announcement);
@@ -519,6 +525,17 @@ const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
 useEffect(() => {
   setPage(1);
 }, [appliedFilters]);
+
+const formatDateTimeLocal = (dateString?: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 
   return (
@@ -1545,16 +1562,17 @@ paginatedAnnouncements.map((announcement, index) => (
                 </Box>
               )}
               
-              <TextField
-                fullWidth
-                label="Schedule Date & Time"
-                type="datetime-local"
-                value={formData.scheduledAt || ''}
-                onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
-                disabled={dialogMode === 'view'}
-                InputLabelProps={{ shrink: true }}
-                sx={{ mb: 2 }}
-              />
+             <TextField
+  fullWidth
+  label="Schedule Date & Time"
+  type="datetime-local"
+  value={formData.scheduledAt || ''}
+  onChange={(e) =>
+    setFormData({ ...formData, scheduledAt: e.target.value })
+  }
+  InputLabelProps={{ shrink: true }}
+/>
+
               
               <Box sx={{ mt: 3 }}>
                 <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
