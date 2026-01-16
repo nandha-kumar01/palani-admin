@@ -70,6 +70,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import AutoStories from '@mui/icons-material/AutoStories';
 import ThemeRegistry from '@/components/ThemeRegistry';
 import LocationSidebar from '@/components/LocationSidebar';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
@@ -123,34 +124,44 @@ const drawerWidth = 320;
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
   { text: 'Live Tracking', icon: <LocationOn />, path: '/admin/tracking' },
+
   { 
     text: 'User Management', 
-    icon: <ManageAccountsIcon/>, 
+    icon: <ManageAccountsIcon />, 
     children: [
-      { text: 'Users', icon: <AccountCircle/>, path: '/admin/users' },
+      { text: 'Users', icon: <AccountCircle />, path: '/admin/users' },
       { text: 'Groups', icon: <Groups />, path: '/admin/groups' },
       { text: 'User Analytics', icon: <Assessment />, path: '/admin/user-analytics' },
     ]
   },
+
   { 
     text: 'Places Management', 
     icon: <Temple />, 
     children: [
       { text: 'Temples', icon: <TempleHinduIcon />, path: '/admin/temples' },
       { text: 'Annadhanam', icon: <Restaurant />, path: '/admin/annadhanam' },
-      { text: 'Madangal', icon: <ChaletIcon/>, path: '/admin/madangal' },
+      { text: 'Madangal', icon: <ChaletIcon />, path: '/admin/madangal' },
     ]
   },
+
   { 
     text: 'Content Management', 
     icon: <DifferenceIcon />, 
     children: [
+     
       { text: 'Songs', icon: <MusicNote />, path: '/admin/songs' },
       { text: 'Gallery', icon: <PhotoLibrary />, path: '/admin/gallery' },
+       { 
+        text: 'Spiritual Stories', 
+        icon: <AutoStories />, 
+        path: '/admin/spiritual-stories' 
+      },
       { text: 'Announcements', icon: <Campaign />, path: '/admin/announcements' },
       { text: 'Quotes', icon: <TextFields />, path: '/admin/quotes' },
     ]
   },
+
   { 
     text: 'Location Management', 
     icon: <NavigationIcon />, 
@@ -160,6 +171,7 @@ const menuItems = [
       { text: 'City', icon: <LocationCityIcon />, path: '/admin/location/city' },
     ]
   },
+
   { 
     text: 'System Management', 
     icon: <Settings />, 
@@ -172,6 +184,7 @@ const menuItems = [
     ]
   },
 ];
+
 
 interface AdminLayoutProps {
   children: React.ReactNode;
