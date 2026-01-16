@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import {
   Box,
   Card,
@@ -208,6 +208,44 @@ export default function AdminLogin() {
     setForgotLoading(false);
   };
 
+  const storyImages = [
+      'https://res.cloudinary.com/dy5vca5ux/image/upload/v1768378211/309b3f4a4bcafa0af04c1a94c386d54d_uiemos.png',
+  'https://res.cloudinary.com/dy5vca5ux/image/upload/v1756896573/LoginImg_xgfaka.png',
+  "https://res.cloudinary.com/dy5vca5ux/image/upload/v1767862719/palani-gallery/mkmqptjlm9oce1gxzlqn.jpg",
+  "https://res.cloudinary.com/dy5vca5ux/image/upload/v1762442122/palani-temples/inmz8pbvukjqulplkuhz.jpg",
+  'https://res.cloudinary.com/dy5vca5ux/image/upload/v1768378211/9e28733244bc223f51f72098f7c809cf_pcai2y.png',
+  
+];
+
+const STORY_DURATION = 6000; 
+
+const [storyIndex, setStoryIndex] = useState(0);
+const [progress, setProgress] = useState(0);
+
+useEffect(() => {
+  setProgress(0);
+
+  const startTime = Date.now();
+
+  const interval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const percentage = Math.min(
+      (elapsed / STORY_DURATION) * 100,
+      100
+    );
+
+    setProgress(percentage);
+
+    if (percentage >= 100) {
+      clearInterval(interval);
+      setStoryIndex((prev) => (prev + 1) % storyImages.length);
+    }
+  }, 30);
+
+  return () => clearInterval(interval);
+}, [storyIndex]);
+
+
   return (
     <ThemeRegistry>
      <Box
@@ -235,8 +273,8 @@ export default function AdminLogin() {
   }}
 >
 
-          {/* Left side - Deity Image */}
-        <Box
+{/* Left side - Web Story Image */}
+<Box
   sx={{
     width: '50%',
     display: { xs: 'none', md: 'flex' },
@@ -244,25 +282,86 @@ export default function AdminLogin() {
     justifyContent: 'center',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     p: 3,
+    position: 'relative',
   }}
 >
+  <Box
+    sx={{
+      width: '100%',
+      maxWidth: 450,
+      height: 600,
+      borderRadius: '20px',
+      backgroundImage: `url(${storyImages[storyIndex]})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      border: '4px solid rgba(255,255,255,0.4)',
+      boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
+      transition: 'background-image 0.8s ease-in-out',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+  >
+    {/* Bottom Gradient Overlay */}
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        background:
+          'linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05))',
+      }}
+    />
 
-            <Box
-             sx={{
-    width: '100%',
-    maxWidth: 450,
-    height: 600,
-    borderRadius: '20px',
-    backgroundImage: 'url(https://res.cloudinary.com/dy5vca5ux/image/upload/v1756896573/LoginImg_xgfaka.png)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
- backgroundRepeat: 'no-repeat',
-                border: '4px solid rgba(255,255,255,0.4)',
-                boxShadow: '0 15px 40px rgba(0,0,0,0.3)',  }}
-            >
-           
-            </Box>
-          </Box>
+  {/* Story Progress Bars – Bottom Moving */}
+<Box
+  sx={{
+    position: 'absolute',
+    bottom: -5,
+    left: 0,
+    right: 0,
+    px: 2,
+    pb: 1.2,
+    display: 'flex',
+    gap: 1,
+    zIndex: 3,
+    background:
+      'linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0))',
+  }}
+>
+  {storyImages.map((_, index) => (
+    <Box
+      key={index}
+      sx={{
+        flex: 1,
+        height: 6,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255,255,255,0.35)',
+        overflow: 'hidden',
+      }}
+    >
+      <Box
+        sx={{
+          height: '100%',
+          width:
+            index < storyIndex
+              ? '100%'
+              : index === storyIndex
+              ? `${progress}%`
+              : '0%',
+          backgroundColor: '#fff',
+          transition:
+            index === storyIndex
+              ? 'width 0.03s linear'
+              : 'none',
+        }}
+      />
+    </Box>
+  ))}
+</Box>
+  </Box>
+</Box>
+
+
 
           {/* Right side - Login Form */}
           <Box

@@ -23,7 +23,11 @@ import {
   Tooltip,
   Badge,
 } from '@mui/material';
-import {
+  import CancelIcon from '@mui/icons-material/Cancel';
+import StartIcon from '@mui/icons-material/Start';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+
+  import {
   LocationOn,
   Refresh,
   MyLocation,
@@ -31,9 +35,11 @@ import {
   Group as GroupIcon,
   Person,
   DirectionsWalk,
+  OnlinePrediction,
   Wifi,
   WifiOff,
   AccessTime,
+  Route,
   ExitToApp,
 } from '@mui/icons-material';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -44,7 +50,10 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Player from 'react-lottie-player';
 import loadingAnimation from '../../../../Loading.json';
-
+import People from '@mui/icons-material/People';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 // Dynamically import LocationMap to avoid SSR issues with Leaflet
 const LocationMap = dynamic(() => import('@/components/LocationMap'), {
   ssr: false,
@@ -91,6 +100,19 @@ export default function TrackingPage() {
   const [adminLocation, setAdminLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [currentUser, setCurrentUser] = useState<{id: string; name: string} | null>(null);
 const [showFilters, setShowFilters] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
+const [mounted, setMounted] = useState(false);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+const [lastUpdated, setLastUpdated] = useState<string>('');
+
+useEffect(() => {
+  setLastUpdated(new Date().toLocaleString());
+}, []);
+
 
   // Check authentication
   useEffect(() => {
@@ -131,55 +153,38 @@ const [showFilters, setShowFilters] = useState(false);
     adminLocation: adminLocation || undefined,
   }), [trackingMode, selectedUserId, selectedGroupId, adminLocation]);
 
-  const getCurrentLocation = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setAdminLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          // Handle GeolocationPositionError properly
-          let errorMessage = 'Unknown geolocation error';
-          
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied by user';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information unavailable';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Location request timed out';
-              break;
-            default:
-              errorMessage = error.message || 'Failed to get location';
-              break;
-          }
-          
-          console.error('Error getting admin location:', {
-            code: error.code,
-            message: errorMessage,
-            originalError: error
-          });
-          
-          // Set error state to show user-friendly message
-          setError(`Failed to get your location: ${errorMessage}`);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      const errorMessage = 'Geolocation is not supported by this browser';
-      console.error('Error getting admin location:', errorMessage);
-      setError(errorMessage);
+const getCurrentLocation = useCallback(() => {
+  if (!navigator.geolocation) {
+    setError('Geolocation is not supported by this browser');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      setAdminLocation({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+      setError('');
+    },
+    (error) => {
+      let message = 'Unable to fetch location';
+
+      if (error?.code === 1) message = 'Location permission denied';
+      else if (error?.code === 2) message = 'Location unavailable';
+      else if (error?.code === 3) message = 'Location request timed out';
+
+      console.error('Geolocation Error:', error);
+      setError(message);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 60000,
     }
-  }, []);
+  );
+}, []);
+
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -318,7 +323,41 @@ const [showFilters, setShowFilters] = useState(false);
 const isStopDisabled =
   !isTracking || trackingLoading;
 
-  
+
+  const handleStartTracking = async () => {
+  if (actionInProgress || isTracking) return;
+
+  try {
+    setActionInProgress(true);
+    setError('');
+
+    await startTracking(); // wait till firebase/socket ready
+  } catch (err) {
+    console.error('Start tracking failed:', err);
+    setError('Failed to start tracking. Please try again.');
+  } finally {
+    setActionInProgress(false);
+  }
+};
+
+const handleStopTracking = async () => {
+  if (actionInProgress || !isTracking) return;
+
+  try {
+    setActionInProgress(true);
+    setError('');
+
+    await stopTracking(); // IMPORTANT: wait till unsubscribe
+  } catch (err) {
+    console.error('Stop tracking failed:', err);
+    setError('Failed to stop tracking. Please try again.');
+  } finally {
+    setActionInProgress(false);
+  }
+};
+
+
+
   return (
     <AdminLayout>
       <Box >
@@ -405,25 +444,122 @@ const isStopDisabled =
               Live Location Tracking
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="h6" color="text.secondary">
               Welcome, {currentUser.name}
             </Typography>
-            <Chip
-              icon={connected ? <Wifi /> : <WifiOff />}
-              label={connected ? 'Connected' : 'Disconnected'}
-              color={connected ? 'success' : 'error'}
-              variant="outlined"
-            />
+           <Chip
+  icon={
+    connected ? (
+      <Wifi sx={{ fontSize: 18 }} />
+    ) : (
+      <WifiOff sx={{ fontSize: 18 }} />
+    )
+  }
+  label={connected ? 'Connected' : 'Disconnected'}
+  sx={{
+    px: 1.5,
+    height: 36,
+    fontWeight: 600,
+    fontSize: '0.9rem',
+    borderRadius: '999px',
+    letterSpacing: '0.3px',
+
+    // Dynamic colors
+    color: connected ? '#065f46' : '#7f1d1d',
+    background: connected
+      ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+      : 'linear-gradient(135deg, #fef2f2, #fee2e2)',
+    border: `1.5px solid ${
+      connected ? '#34d399' : '#f87171'
+    }`,
+
+    // Icon color
+    '& .MuiChip-icon': {
+      color: connected ? '#10b981' : '#ef4444',
+    },
+
+    // Hover effect
+    '&:hover': {
+      background: connected
+        ? 'linear-gradient(135deg, #d1fae5, #a7f3d0)'
+        : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+      boxShadow: connected
+        ? '0 4px 12px rgba(16,185,129,0.35)'
+        : '0 4px 12px rgba(239,68,68,0.35)',
+    },
+
+    transition: 'all 0.25s ease',
+  }}
+/>
+
+
             <Button
-              variant="outlined"
-              startIcon={<MyLocation />}
-              onClick={getCurrentLocation}
-            >
-              Update My Location
-            </Button>
-            <IconButton onClick={handleLogout} title="Logout">
-              <ExitToApp />
-            </IconButton>
+  variant="outlined"
+  startIcon={<MyLocation />}
+  onClick={getCurrentLocation}
+  sx={{
+    color: '#ffffff',                // 👈 text white
+    borderColor: '#ffffff',          // 👈 border white
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    fontWeight: 600,
+    '& .MuiButton-startIcon': {
+      color: '#ffffff',              // 👈 icon white
+    },
+    '&:hover': {
+      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+      color: '#ffffff',
+      borderColor: '#ffffff',
+    },
+  }}
+>
+  Update My Location
+</Button>
+
+ <Button
+  onClick={handleLogout}
+  startIcon={<ExitToApp />}
+  title="Logout"
+  sx={{
+    minWidth: 'auto',
+    height: 35,
+    px: 1.5,
+    borderRadius: '7px',
+
+    color: '#ef4444',
+    backgroundColor: '#fef2f2',
+    border: '1.5px solid #fecaca',
+    fontWeight: 600,
+    fontSize: '0.85rem',
+    textTransform: 'none',
+
+    '& .MuiButton-startIcon': {
+      marginRight: '6px',
+      color: '#ef4444',
+    },
+
+    '& svg': {
+      fontSize: 20,
+    },
+
+    '&:hover': {
+      backgroundColor: '#fee2e2',
+      color: '#dc2626',
+      borderColor: '#fca5a5',
+      boxShadow: '0 6px 16px rgba(239, 68, 68, 0.35)',
+      transform: 'translateY(-1px) scale(1.03)',
+    },
+
+    '&:active': {
+      transform: 'scale(0.96)',
+    },
+
+    transition: 'all 0.25s ease',
+  }}
+>
+  Logout
+</Button>
+
+
           </Stack>
         </Box>
 
@@ -441,89 +577,260 @@ const isStopDisabled =
               mb: 3
             }}>
               <Box>
-                <Card sx={{
-                  background: 'linear-gradient(135deg, #667eea15 0%, #764ba225 100%)',
-                  border: '1px solid #667eea30',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 25px #667eea25',
-                    border: '1px solid #667eea50',
-                  },
-                  transition: 'all 0.3s ease',
-                }}>
-                  <CardContent>
-                    <Typography variant="h4" sx={{ color: '#667eea' }} fontWeight="bold">
-                      {trackingStats.total}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Users
-                    </Typography>
-                  </CardContent>
-                </Card>
+  <Card
+ sx={{
+    background: 'linear-gradient(135deg, #764ba215 0%, #8B5CF625 100%)',
+    border: '1px solid #764ba230',
+    cursor: 'pointer',
+    borderRadius: '14px',
+    transition: 'all 0.3s ease',
+
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 0 25px #2196F3',
+      border: '1px solid #764ba250',
+    },
+  }}
+>
+  <CardContent>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+      {/* LEFT CONTENT */}
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{
+            color: '#6366f1',
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          {trackingStats.total}
+        </Typography>
+
+        <Typography
+          sx={{
+            fontSize: '0.85rem',
+            color: '#6b7280',
+            mt: 0.5,
+          }}
+        >
+          Total Users
+        </Typography>
+      </Box>
+
+      {/* RIGHT ICON */}
+      <Box
+        sx={{
+          width: 52,
+          height: 52,
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+
+        
+
+        }}
+      >
+        <Person
+          sx={{
+            fontSize: 38,
+            color: '#4f46e5',
+          }}
+        />
+      </Box>
+    </Box>
+  </CardContent>
+</Card>
+
+
               </Box>
               <Box>
-                <Card sx={{
-                  background: 'linear-gradient(135deg, #764ba215 0%, #8B5CF625 100%)',
-                  border: '1px solid #764ba230',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 25px #764ba225',
-                    border: '1px solid #764ba250',
-                  },
-                  transition: 'all 0.3s ease',
-                }}>
-                  <CardContent>
-                    <Typography variant="h4" sx={{ color: '#764ba2' }} fontWeight="bold">
-                      {trackingStats.online}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Online Now
-                    </Typography>
-                  </CardContent>
-                </Card>
+              <Card
+  sx={{
+    background: 'linear-gradient(135deg, #764ba215 0%, #8B5CF625 100%)',
+    border: '1px solid #764ba230',
+    cursor: 'pointer',
+    borderRadius: '14px',
+    transition: 'all 0.3s ease',
+
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 0 25px #2196F3',
+      border: '1px solid #764ba250',
+    },
+  }}
+>
+  <CardContent>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}
+    >
+      {/* LEFT CONTENT */}
+      <Box>
+        <Typography
+          variant="h4"
+          sx={{ color: '#764ba2', fontWeight: 'bold' }}
+        >
+          {trackingStats.online}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Online Now
+        </Typography>
+      </Box>
+
+      {/* RIGHT ICON */}
+      <Box
+        sx={{
+          width: 52,
+          height: 52,
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Wifi
+          sx={{
+            fontSize: 38,
+            color: '#764ba2',
+          }}
+        />
+      </Box>
+    </Box>
+  </CardContent>
+</Card>
+
               </Box>
-              <Box>
-                <Card sx={{
-                  background: 'linear-gradient(135deg, #8B5CF615 0%, #667eea25 100%)',
-                  border: '1px solid #8B5CF630',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 25px #8B5CF625',
-                    border: '1px solid #8B5CF650',
-                  },
-                  transition: 'all 0.3s ease',
-                }}>
-                  <CardContent>
-                    <Typography variant="h4" sx={{ color: '#8B5CF6' }} fontWeight="bold">
-                      {trackingStats.tracking}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Actively Tracking
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-              <Box>
-                <Card sx={{
-                  background: 'linear-gradient(135deg, #667eea15 0%, #764ba225 100%)',
-                  border: '1px solid #667eea30',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 25px #667eea25',
-                    border: '1px solid #667eea50',
-                  },
-                  transition: 'all 0.3s ease',
-                }}>
-                  <CardContent>
-                    <Typography variant="h4" sx={{ color: '#667eea' }} fontWeight="bold">
-                      {formatDistance(trackingStats.averageDistance)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Avg Distance
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
+             <Box>
+  <Card
+    sx={{
+    background: 'linear-gradient(135deg, #764ba215 0%, #8B5CF625 100%)',
+    border: '1px solid #764ba230',
+    cursor: 'pointer',
+    borderRadius: '14px',
+    transition: 'all 0.3s ease',
+
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 0 25px #2196F3',
+      border: '1px solid #764ba250',
+    },
+  }}
+  >
+    <CardContent>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* LEFT CONTENT */}
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{ color: '#8B5CF6', fontWeight: 'bold' }}
+          >
+            {trackingStats.tracking}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Actively Tracking
+          </Typography>
+        </Box>
+
+        {/* RIGHT ICON */}
+        <Box
+          sx={{
+            width: 52,
+            height: 52,
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <LocationOn
+            sx={{
+              fontSize: 38,
+              color: '#8B5CF6',
+            }}
+          />
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+</Box>
+
+            <Box>
+  <Card
+    sx={{
+    background: 'linear-gradient(135deg, #764ba215 0%, #8B5CF625 100%)',
+    border: '1px solid #764ba230',
+    cursor: 'pointer',
+    borderRadius: '14px',
+    transition: 'all 0.3s ease',
+
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 0 25px #2196F3',
+      border: '1px solid #764ba250',
+    },
+  }}
+  >
+    <CardContent>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* LEFT CONTENT */}
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{ color: '#667eea', fontWeight: 'bold' }}
+          >
+            {formatDistance(trackingStats.averageDistance)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Avg Distance
+          </Typography>
+        </Box>
+
+        {/* RIGHT ICON */}
+        <Box
+          sx={{
+            width: 52,
+            height: 52,
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Route
+            sx={{
+              fontSize: 38,
+              color: '#667eea',
+            }}
+          />
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+</Box>
+
               
             </Box>
 
@@ -555,7 +862,27 @@ const isStopDisabled =
   <CardContent>
     <Stack spacing={3}>
 
-      {/* TOP FIELDS */}
+   <Typography
+  variant="h6"
+  component="span"            // 🔑 important
+  sx={{
+    display: 'inline-flex',   // text width-ku mattum background
+    alignItems: 'center',
+    color: '#7353ae',
+    fontWeight: 700,
+    mb: 2,
+    ml: -3.5,
+    px: 2,
+    py: 0.8,
+    borderRadius: 1.5,
+    backgroundColor: '#f3e8ff',
+    width: 'fit-content',     // extra safety
+  }}
+>
+  Filter Location
+</Typography>
+
+
       <Box
         sx={{
           display: 'grid',
@@ -563,8 +890,26 @@ const isStopDisabled =
           gap: 3,
         }}
       >
+
+        
         {/* Tracking Mode */}
-        <FormControl fullWidth>
+        <FormControl
+                      fullWidth
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          transition: 'all 0.2s ease',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
+                        },
+                      }}
+                    >
           <InputLabel>Tracking Mode</InputLabel>
           <Select
             value={trackingMode}
@@ -610,7 +955,23 @@ const isStopDisabled =
         )}
 
         {trackingMode === 'individual' && (
-          <FormControl fullWidth>
+           <FormControl
+                      fullWidth
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          backgroundColor: 'white',
+                          transition: 'all 0.2s ease',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#667eea',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#667eea',
+                            borderWidth: 2,
+                          },
+                        },
+                      }}
+                    >
             <InputLabel>Select User</InputLabel>
             <Select
               value={selectedUserId}
@@ -628,37 +989,80 @@ const isStopDisabled =
       </Box>
 
       {/* BUTTONS */}
-      <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap">
-        <Button
-          variant="contained"
-          disabled={isStartDisabled}
-          onClick={startTracking}
-          sx={{
-            minWidth: 200,
-            height: 52,
-            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
-            },
-          }}
-        >
-          Start Tracking
-        </Button>
+   {/* BUTTONS */}
+<Box display="flex" justifyContent="flex-end" alignItems="center" gap={2}>
+  
+ <Button
+  variant="contained"
+  disabled={
+    isTracking ||
+    trackingLoading ||
+    actionInProgress ||
+    (trackingMode !== 'all' && !selectedGroupId && !selectedUserId)
+  }
+  onClick={handleStartTracking}
+  startIcon={<StartIcon />}
+  sx={{
+    minWidth: 140,
+    height: 40,
+    fontWeight: 600,
+    textTransform: 'none',
 
-        <Button
-          variant="outlined"
-          color="error"
-          disabled={isStopDisabled}
-          onClick={stopTracking}
-          sx={{
-            minWidth: 200,
-            height: 52,
-            borderWidth: 2,
-          }}
-        >
-          Stop Tracking
-        </Button>
-      </Box>
+    // Enabled
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    color: '#ffffff',
+
+    '&:hover': {
+      background: 'linear-gradient(135deg, #5a6fd8, #6a4190)',
+    },
+
+    // Disabled
+    '&.Mui-disabled': {
+      background: '#e5e7eb',
+      color: '#9ca3af',
+    },
+  }}
+>
+  {actionInProgress ? 'Starting...' : 'Start Tracking'}
+</Button>
+
+
+<Button
+  variant="contained"
+  disabled={
+    !isTracking ||
+    trackingLoading ||
+    actionInProgress
+  }
+  onClick={handleStopTracking}
+  startIcon={<CancelIcon />}
+  sx={{
+    minWidth: 140,
+    height: 40,
+    fontWeight: 600,
+    textTransform: 'none',
+
+    // Enabled (danger)
+    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: '#ffffff',
+
+    '&:hover': {
+      background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+    },
+
+    // Disabled state
+    '&.Mui-disabled': {
+      background: '#fee2e2',
+      color: '#fca5a5',
+    },
+  }}
+>
+  {actionInProgress ? 'Stopping...' : 'Stop Tracking'}
+</Button>
+
+
+</Box>
+
 
     </Stack>
   </CardContent>
@@ -667,34 +1071,191 @@ const isStopDisabled =
 
         {/* Admin Location */}
         {adminLocation && (
-          <Card sx={{ 
-            mb: 3,
-            background: 'linear-gradient(135deg, #667eea10 0%, #764ba215 100%)',
-            border: '1px solid #667eea20',
-          }}>
+          <Card sx={{mb:3}} >
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ color: '#667eea', fontWeight: 600 }}>
-                Your Current Location (Admin)
-              </Typography>
+            
               <Box display="flex" alignItems="center" gap={2}>
-                <Avatar sx={{ 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-                  mr: 2 
-                }}>
-                  <MyLocation />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight="medium">
-                    Admin Console
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lat: {adminLocation.latitude.toFixed(6)}, 
-                    Lng: {adminLocation.longitude.toFixed(6)}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Last updated: {new Date().toLocaleString()}
-                  </Typography>
-                </Box>
+               
+             
+
+<Box
+  sx={{
+    width: '100%',
+    px: { xs: 2, md: 4 },
+    py: 3,
+    backgroundColor: '#ffffff',
+  }}
+>
+  {/* TOP HEADING */}
+  <Typography
+  variant="h6"
+  sx={{
+    display: 'inline-block',   // 🔑 key
+    color: '#7353ae',
+    fontWeight: 700,
+    mb: 0.5,
+    ml: -3.5,
+    px: 2,                     // left & right padding
+    py: 0.8,                   // top & bottom padding
+    borderRadius: 1.5,
+    backgroundColor: '#f3e8ff', // soft purple background
+  }}
+>
+  Your Current Location
+</Typography>
+
+
+  {/* MAIN ROW */}
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 3,
+      flexWrap: 'wrap',
+    }}
+  >
+    {/* LEFT – Avatar + Text */}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Avatar
+        sx={{
+          width: 44,
+          height: 44,
+          background:
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
+      >
+        <MyLocation />
+      </Avatar>
+
+      <Box>
+      <Typography
+        variant='h6'
+          sx={{
+            letterSpacing: 0.6,
+             color: '#7353ae',
+          fontWeight: 700,
+            mb: 0.3,
+          }}
+        >
+          Admin Console
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: '1rem',
+            color: 'black', fontWeight: 300 
+          }}
+        >
+          Live tracking details
+        </Typography>
+      </Box>
+    </Box>
+
+    {/* RIGHT – Location Info (UNCHANGED STYLE) */}
+    <Box
+      sx={{
+        display: 'flex',
+        gap: { xs: 2, md: 4 },
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}
+    >
+      {/* Latitude */}
+      <Box
+        sx={{
+          px: 2.5,
+          py: 1.5,
+          borderRadius: 1.5,
+         border: '1.5px solid #5047e5',
+          backgroundColor: '#f0fdf4',
+          minWidth: 140,
+        }}
+      >
+        <Typography
+        variant='h6'
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+             color: '#7353ae',
+          fontWeight: 700,
+            mb: 0.3,
+          }}
+        >
+          Latitude
+        </Typography>
+        <Typography sx={{ fontSize: '1rem',color:"black", fontWeight: 300 }}>
+          {adminLocation.latitude.toFixed(6)}
+        </Typography>
+      </Box>
+
+      {/* Longitude */}
+      <Box
+        sx={{
+          px: 2.5,
+          py: 1.5,
+          borderRadius: 1.5,
+         border: '1.5px solid #5047e5',
+          backgroundColor: '#f0fdf4',
+          minWidth: 140,
+        }}
+      >
+        <Typography
+        variant='h6'
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+             color: '#7353ae',
+          fontWeight: 700,
+            mb: 0.3,
+          }}
+        >
+          Longitude
+        </Typography>
+        <Typography sx={{ fontSize: '1rem',color:"black", fontWeight: 300 }}>
+          {adminLocation.longitude.toFixed(6)}
+        </Typography>
+      </Box>
+
+      {/* Last Updated */}
+      <Box
+        sx={{
+          px: 2.5,
+          py: 1.5,
+          borderRadius: 1.5,
+          border: '1.5px solid #5047e5',
+          backgroundColor: '#f0fdf4',
+          minWidth: 180,
+        }}
+      >
+        <Typography
+        variant='h6'
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+             color: '#7353ae',
+          fontWeight: 700,
+            mb: 0.3,
+          }}
+        >
+          Last Updated
+        </Typography>
+        <Typography
+          sx={{
+            fontSize: '0.95rem',
+            fontWeight: 300,
+            color: 'black',
+          }}
+        >
+          {new Date().toLocaleString()}
+        </Typography>
+      </Box>
+    </Box>
+  </Box>
+</Box>
+
+
+
+
               </Box>
             </CardContent>
           </Card>
@@ -706,29 +1267,68 @@ const isStopDisabled =
             {/* Map View */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">
+   <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography
+  variant="h6"
+  sx={{
+    display: 'inline-block',   // 🔑 key
+    color: '#7353ae',
+    fontWeight: 700,
+    mb: 0.5,
+    px: 2,                     // left & right padding
+    py: 0.8,                   // top & bottom padding
+    borderRadius: 1.5,
+    backgroundColor: '#f3e8ff', // soft purple background
+  }}
+>
                     Live Location Map
                   </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Chip 
-                      size="small" 
-                      label="Real-time Updates" 
-                      sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                      }}
-                      icon={<Wifi sx={{ color: 'white !important' }} />}
-                    />
-                    <Chip 
-                      size="small" 
-                      label={`${locationsList.length} Users`} 
-                      sx={{
-                        background: 'linear-gradient(135deg, #8B5CF6 0%, #667eea 100%)',
-                        color: 'white',
-                      }}
-                    />
-                  </Stack>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+  {/* Real-time Updates */}
+  <Chip
+    label="Real-time Updates"
+    icon={<Wifi />}
+    sx={{
+      height: 36,
+      px: 1.6,
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      borderRadius: 2,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+
+      '& .MuiChip-icon': {
+        color: 'white',
+        fontSize: 18,
+        ml: 0.6,
+        mr: 0.8,   // ✅ icon ↔ text gap
+      },
+
+      '& .MuiChip-label': {
+        px: 0,
+      },
+    }}
+  />
+
+  {/* Users */}
+  <Chip
+    label={`${locationsList.length} Users`}
+    sx={{
+      height: 36,
+      px: 1.6,
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      borderRadius: 2,
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #667eea 100%)',
+      color: 'white',
+
+      '& .MuiChip-label': {
+        px: 0,
+      },
+    }}
+  />
+</Stack>
+
                 </Box>
                 
                 <LocationMap 
@@ -743,28 +1343,72 @@ const isStopDisabled =
             <Card>
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">
+                   <Typography
+  variant="h6"
+  sx={{
+    display: 'inline-block',   // 🔑 key
+    color: '#7353ae',
+    fontWeight: 700,
+    mb: 0.5,
+    px: 2,                     // left & right padding
+    py: 0.8,                   // top & bottom padding
+    borderRadius: 1.5,
+    backgroundColor: '#f3e8ff', // soft purple background
+  }}
+>
                     Live Locations ({locationsList.length} {locationsList.length === 1 ? 'person' : 'people'})
                   </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Chip 
-                      size="small" 
-                      label="Live Updates" 
-                      sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                      }}
-                      icon={<Wifi sx={{ color: 'white !important' }} />}
-                    />
-                    <Chip 
-                      size="small" 
-                      label={`${trackingStats.online} Online`} 
-                      sx={{
-                        background: 'linear-gradient(135deg, #8B5CF6 0%, #667eea 100%)',
-                        color: 'white',
-                      }}
-                      icon={<AccessTime sx={{ color: 'white !important' }} />}
-                    />
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+
+                    <Chip
+    label="Live Updates"
+    icon={<Wifi />}
+    sx={{
+      height: 36,
+      px: 1.5,
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      borderRadius: 2,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+
+      '& .MuiChip-icon': {
+        color: 'white',
+        fontSize: 18,
+        ml: 0.5,
+        mr: 0.8,   // ✅ ICON ↔ TEXT GAP
+      },
+
+      '& .MuiChip-label': {
+        px: 0,
+      },
+    }}
+  />
+
+                    <Chip
+    label={`${trackingStats.online} Online`}
+    icon={<AccessTime />}
+    sx={{
+      height: 36,
+      px: 1.5,
+      fontSize: '0.85rem',
+      fontWeight: 600,
+      borderRadius: 2,
+      background: 'linear-gradient(135deg, #8B5CF6 0%, #667eea 100%)',
+      color: 'white',
+
+      '& .MuiChip-icon': {
+        color: 'white',
+        fontSize: 18,
+        ml: 0.5,
+        mr: 0.8,   // ✅ ICON ↔ TEXT GAP
+      },
+
+      '& .MuiChip-label': {
+        px: 0,
+      },
+    }}
+  />
                   </Stack>
                 </Box>
 

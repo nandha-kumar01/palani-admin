@@ -12,20 +12,73 @@ import {
   Stack,
   IconButton,
   Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
 } from '@mui/material';
 import {
   Notifications,
   NotificationsOff,
   NotificationsActive,
-  Send,
   Close,
 } from '@mui/icons-material';
-import { useNotifications, useLocationNotifications } from '@/hooks/useNotifications';
+
+/* ===========================
+   🔔 NOTIFICATION HOOK
+=========================== */
+
+function useNotifications(userId: string) {
+  const [permission, setPermission] =
+    useState<NotificationPermission>('default');
+  const [supported, setSupported] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!('Notification' in window)) {
+      setSupported(false);
+      return;
+    }
+    setPermission(Notification.permission);
+  }, []);
+
+  const requestPermission = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await Notification.requestPermission();
+      setPermission(result);
+
+      if (result !== 'granted') {
+        setError('Notification permission not granted');
+        return false;
+      }
+
+      // ✅ test notification
+      new Notification('Notifications Enabled ✅', {
+        body: 'You will now receive updates.',
+      });
+
+      return true;
+    } catch (err) {
+      console.error(err);
+      setError('Failed to enable notifications');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    permission,
+    supported,
+    loading,
+    error,
+    requestPermission,
+  };
+}
+
+/* ===========================
+   📦 MAIN COMPONENT
+=========================== */
 
 interface NotificationManagerProps {
   userId: string;
@@ -33,15 +86,22 @@ interface NotificationManagerProps {
   isAdmin?: boolean;
 }
 
-export default function NotificationManager({ 
-  userId, 
-  userName, 
-  isAdmin = false 
+export default function NotificationManager({
+  userId,
+  userName,
+  isAdmin = false,
 }: NotificationManagerProps) {
-  const [showSendDialog, setShowSendDialog] = useState(false);
-  const [sendToUserId, setSendToUserId] = useState('');
-  const [notificationTitle, setNotificationTitle] = useState('');
-  const [notificationBody, setNotificationBody] = useState('');
+  const {
+    permission,
+    supported,
+    loading,
+    error,
+    requestPermission,
+  } = useNotifications(userId);
+
+  // 🔕 App-level mute
+  const [appMuted, setAppMuted] = useState(false);
+
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -52,113 +112,65 @@ export default function NotificationManager({
     severity: 'info',
   });
 
-  const {
-    permission,
-    token,
-    supported,
-    loading,
-    error,
-    requestPermission,
-    sendNotification,
-  } = useNotifications({
-    userId,
-    autoRequest: true,
-  });
-
-  const {
-    notifyLocationUpdate,
-    notifyGroupJoin,
-    notifyEmergency,
-  } = useLocationNotifications(userId);
-
-  const handleRequestPermission = async () => {
+  const handleEnable = async () => {
     const success = await requestPermission();
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Notifications enabled successfully!',
-        severity: 'success',
-      });
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Failed to enable notifications',
-        severity: 'error',
-      });
-    }
+    setSnackbar({
+      open: true,
+      message: success
+        ? 'Notifications enabled successfully!'
+        : 'Failed to enable notifications',
+      severity: success ? 'success' : 'error',
+    });
   };
 
-  const handleSendNotification = async () => {
-    if (!sendToUserId || !notificationTitle || !notificationBody) {
-      setSnackbar({
-        open: true,
-        message: 'Please fill in all fields',
-        severity: 'error',
-      });
-      return;
-    }
-
-    const success = await sendNotification(
-      sendToUserId,
-      notificationTitle,
-      notificationBody,
-      {
-        type: 'admin_message',
-        sentBy: userName,
-        timestamp: Date.now(),
-      }
-    );
-
-    if (success) {
-      setSnackbar({
-        open: true,
-        message: 'Notification sent successfully!',
-        severity: 'success',
-      });
-      setShowSendDialog(false);
-      setSendToUserId('');
-      setNotificationTitle('');
-      setNotificationBody('');
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Failed to send notification',
-        severity: 'error',
-      });
-    }
+  const getStatus = () => {
+    if (!supported)
+      return { label: 'Not Supported', color: 'error', icon: <NotificationsOff /> };
+    if (permission === 'granted' && !appMuted)
+      return { label: 'Enabled', color: 'success', icon: <NotificationsActive /> };
+    if (permission === 'granted' && appMuted)
+      return { label: 'Muted', color: 'warning', icon: <NotificationsOff /> };
+    if (permission === 'denied')
+      return { label: 'Blocked', color: 'error', icon: <NotificationsOff /> };
+    return { label: 'Not Enabled', color: 'warning', icon: <Notifications /> };
   };
 
-  const getPermissionStatus = () => {
-    if (!supported) return { color: 'error', label: 'Not Supported', icon: NotificationsOff };
-    if (permission === 'granted') return { color: 'success', label: 'Enabled', icon: NotificationsActive };
-    if (permission === 'denied') return { color: 'error', label: 'Denied', icon: NotificationsOff };
-    return { color: 'warning', label: 'Not Enabled', icon: Notifications };
-  };
-
-  const statusInfo = getPermissionStatus();
+  const status = getStatus();
 
   return (
     <>
       <Card>
         <CardContent>
           <Stack spacing={2}>
+            {/* Header */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight="bold">
+              <Typography
+                variant="h6"
+                component="span"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  px: 2,
+                  py: 0.8,
+                  borderRadius: 1.5,
+                  fontWeight: 700,
+                  color: '#7353ae',
+                  backgroundColor: '#f3e8ff',
+                }}
+              >
                 Push Notifications
               </Typography>
+
               <Chip
-                icon={<statusInfo.icon />}
-                label={statusInfo.label}
-                color={statusInfo.color as any}
+                icon={status.icon}
+                label={status.label}
+                color={status.color as any}
                 variant="outlined"
               />
             </Box>
 
-            {error && (
-              <Alert severity="error">
-                {error}
-              </Alert>
-            )}
+            {/* Errors */}
+            {error && <Alert severity="error">{error}</Alert>}
 
             {!supported && (
               <Alert severity="warning">
@@ -166,106 +178,107 @@ export default function NotificationManager({
               </Alert>
             )}
 
-            {supported && permission !== 'granted' && (
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Enable push notifications to receive real-time updates about location changes, 
-                  group activities, and important alerts.
-                </Typography>
-                <Button
-                size='small'
-                  variant="contained"
-                  startIcon={<Notifications />}
-                  onClick={handleRequestPermission}
-                  disabled={loading || permission === 'denied'}
-                  fullWidth
+            {/* Enable Section */}
+            {supported &&
+              permission !== 'granted' &&
+              permission !== 'denied' && (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: '1px solid #e5e7eb',
+                    backgroundColor: '#f9fafb',
+                  }}
                 >
-                  {loading ? 'Requesting...' : 'Enable Notifications'}
-                </Button>
-              </Box>
-            )}
-
-            {permission === 'granted' && token && (
-              <Box>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  Notifications are enabled! You'll receive real-time updates.
-                </Alert>
-                
-                {isAdmin && (
-                  <Button
-                    variant="outlined"
-                    size='small'
-                    startIcon={<Send />}
-                    onClick={() => setShowSendDialog(true)}
-                    fullWidth
+                  <Typography
+                    variant="body2"
+                    sx={{ fontSize: '0.8rem', mb: 1.5, color: 'text.secondary' }}
                   >
-                    Send Notification
+                    Enable push notifications to receive real-time updates and alerts.
+                  </Typography>
+
+                  <Box display="flex" justifyContent="center">
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<Notifications sx={{ fontSize: 16 }} />}
+                      onClick={handleEnable}
+                      disabled={loading}
+                      sx={{
+                        height: 36,
+                        minWidth: 220,
+                        borderRadius: 2,
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        background:
+                          'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      }}
+                    >
+                      {loading ? 'Requesting…' : 'Enable Notifications'}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+
+            {/* Enabled + Mute control */}
+            {permission === 'granted' && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px solid #e5e7eb',
+                  backgroundColor: '#f9fafb',
+                }}
+              >
+                <Stack spacing={1.5} alignItems="center">
+                  <Alert severity="success">
+                    Notifications are enabled. You will receive updates.
+                  </Alert>
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color={appMuted ? 'success' : 'error'}
+                    onClick={() => setAppMuted(prev => !prev)}
+                    sx={{
+                      height: 34,
+                      minWidth: 200,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {appMuted ? 'Enable Notifications' : 'Disable Notifications'}
                   </Button>
-                )}
+
+                  {appMuted && (
+                    <Typography variant="caption" color="text.secondary">
+                      Notifications are muted inside the app
+                    </Typography>
+                  )}
+                </Stack>
               </Box>
             )}
 
+            {/* Blocked */}
             {permission === 'denied' && (
               <Alert severity="error">
-                Notifications are blocked. Please enable them in your browser settings to receive updates.
+                Notifications are blocked. Enable them in browser settings.
               </Alert>
             )}
           </Stack>
         </CardContent>
       </Card>
 
-      {/* Send Notification Dialog */}
-      <Dialog open={showSendDialog} onClose={() => setShowSendDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Send Notification</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              fullWidth
-              label="User ID"
-              value={sendToUserId}
-              onChange={(e) => setSendToUserId(e.target.value)}
-              placeholder="Enter user ID to send notification to"
-            />
-            <TextField
-              fullWidth
-              label="Title"
-              value={notificationTitle}
-              onChange={(e) => setNotificationTitle(e.target.value)}
-              placeholder="Notification title"
-            />
-            <TextField
-              fullWidth
-              label="Message"
-              value={notificationBody}
-              onChange={(e) => setNotificationBody(e.target.value)}
-              placeholder="Notification message"
-              multiline
-              rows={3}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowSendDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={handleSendNotification}
-            variant="contained"
-            disabled={!sendToUserId || !notificationTitle || !notificationBody}
-          >
-            Send
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for feedback */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
         action={
           <IconButton
             size="small"
-            color="inherit"
-            onClick={() => setSnackbar(prev => ({ ...prev, open: false }))}
+            onClick={() => setSnackbar(s => ({ ...s, open: false }))}
           >
             <Close fontSize="small" />
           </IconButton>
